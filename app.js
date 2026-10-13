@@ -486,6 +486,45 @@
         if(isCurrentRun(token)){ui.speechBubble.hidden=true;ui.actor.classList.remove("speaking");}
         break;
       }
+      case "listAdd": {
+        const list=project.lists.find(item=>item.id===block.listId);
+        if(list){if(list.items.length>=500)list.items.shift();list.items.push(safeText(block.item,"").slice(0,200));renderListValues();setUnsaved();}
+        else notify("Hãy tạo danh sách trong mục Biến trước.");
+        await delay(80);break;
+      }
+      case "listDelete": {
+        const list=project.lists.find(item=>item.id===block.listId);
+        if(list){const index=n("index",1,1,500)-1;if(index<list.items.length)list.items.splice(index,1);renderLists();renderListValues();setUnsaved();}
+        else notify("Hãy chọn danh sách trong khối lệnh.");
+        await delay(80);break;
+      }
+      case "listInsert": {
+        const list=project.lists.find(item=>item.id===block.listId);
+        if(list){const index=clamp(n("index",1,1,500)-1,0,list.items.length);list.items.splice(index,0,safeText(block.item,"").slice(0,200));if(list.items.length>500)list.items.pop();renderLists();renderListValues();setUnsaved();}
+        else notify("Hãy chọn danh sách trong khối lệnh.");
+        await delay(80);break;
+      }
+      case "listReplace": {
+        const list=project.lists.find(item=>item.id===block.listId);
+        if(list){const index=n("index",1,1,500)-1;if(index<list.items.length&&index>=0)list.items[index]=safeText(block.item,"").slice(0,200);renderLists();renderListValues();setUnsaved();}
+        else notify("Hãy chọn danh sách trong khối lệnh.");
+        await delay(80);break;
+      }
+      case "listClear": {
+        const list=project.lists.find(item=>item.id===block.listId);
+        if(list){list.items.length=0;renderLists();renderListValues();setUnsaved();}
+        else notify("Hãy chọn danh sách trong khối lệnh.");
+        await delay(80);break;
+      }
+      case "listSay": {
+        const list=project.lists.find(item=>item.id===block.listId);
+        if(!list){notify("Hãy chọn danh sách trong khối lệnh.");break;}
+        ui.speechBubble.textContent=list.items.join(", ")||"(danh sách trống)";
+        ui.speechBubble.classList.remove("thinking");ui.speechBubble.hidden=false;ui.actor.classList.add("speaking");
+        await delay(n("seconds",2,0,30)*1000);
+        if(isCurrentRun(token)){ui.speechBubble.hidden=true;ui.actor.classList.remove("speaking");}
+        break;
+      }
       case "whenTap": actorTapHandlers.push({ block, token }); break;
     }
   }
