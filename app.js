@@ -55,14 +55,16 @@
     listInsert: { category: "data", label: "chèn vào vị trí", icon: "↳", fields: [{ key: "listId", type: "list", value: "" }, { key: "item", type: "text", value: "mục mới", wide: true }, { key: "index", type: "number", value: 1, min: 1, max: 500 }] },
     listReplace: { category: "data", label: "thay mục", icon: "↻", fields: [{ key: "listId", type: "list", value: "" }, { key: "index", type: "number", value: 1, min: 1, max: 500 }, { key: "item", type: "text", value: "mục mới", wide: true }] },
     listClear: { category: "data", label: "xóa hết danh sách", icon: "▤", fields: [{ key: "listId", type: "list", value: "" }] },
-    listSay: { category: "data", label: "nói nội dung danh sách", icon: "☰", fields: [{ key: "listId", type: "list", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] }
+    listSay: { category: "data", label: "nói nội dung danh sách", icon: "☰", fields: [{ key: "listId", type: "list", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] },
+    listLength: { category: "data", label: "nói độ dài danh sách", icon: "≡", fields: [{ key: "listId", type: "list", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] },
+    listItem: { category: "data", label: "nói mục ở vị trí", icon: "№", fields: [{ key: "listId", type: "list", value: "" }, { key: "index", type: "number", value: 1, min: 1, max: 500 }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] }
   };
   const paletteOrder = {
     motion: ["move", "turn", "goTo", "changeX", "changeY"],
     looks: ["say", "think", "show", "hide", "size", "costume", "backdrop"],
     control: ["wait", "repeat", "forever", "ifVar", "spin"],
     events: ["whenTap"],
-    data: ["setVar", "changeVar", "showVar", "hideVar", "sayVar", "listAdd", "listDelete", "listInsert", "listReplace", "listClear", "listSay"]
+    data: ["setVar", "changeVar", "showVar", "hideVar", "sayVar", "listAdd", "listDelete", "listInsert", "listReplace", "listClear", "listSay", "listLength", "listItem"]
   };
 
   const $ = id => document.getElementById(id);
@@ -449,45 +451,6 @@
       }
       case "listAdd": {
         const list=project.lists.find(item=>item.id===block.listId);
-        if(list){list.items.push(safeText(block.item,"").slice(0,200));if(list.items.length>500)list.items.shift();renderListValues();}
-        else notify("Hãy tạo danh sách trong mục Biến trước.");
-        await delay(80);break;
-      }
-      case "listDelete": {
-        const list=project.lists.find(item=>item.id===block.listId);
-        if(list){const index=n("index",1,1,500)-1;if(index>=0&&index<list.items.length)list.items.splice(index,1);renderListValues();}
-        else notify("Hãy chọn danh sách trong khối lệnh.");
-        await delay(80);break;
-      }
-      case "listInsert": {
-        const list=project.lists.find(item=>item.id===block.listId);
-        if(list){const index=clamp(n("index",1,1,500)-1,0,list.items.length);list.items.splice(index,0,safeText(block.item,"").slice(0,200));if(list.items.length>500)list.items.pop();renderListValues();}
-        else notify("Hãy chọn danh sách trong khối lệnh.");
-        await delay(80);break;
-      }
-      case "listReplace": {
-        const list=project.lists.find(item=>item.id===block.listId);
-        if(list){const index=n("index",1,1,500)-1;if(index>=0&&index<list.items.length)list.items[index]=safeText(block.item,"").slice(0,200);renderListValues();}
-        else notify("Hãy chọn danh sách trong khối lệnh.");
-        await delay(80);break;
-      }
-      case "listClear": {
-        const list=project.lists.find(item=>item.id===block.listId);
-        if(list){list.items.length=0;renderListValues();}
-        else notify("Hãy chọn danh sách trong khối lệnh.");
-        await delay(80);break;
-      }
-      case "listSay": {
-        const list=project.lists.find(item=>item.id===block.listId);
-        if(!list){notify("Hãy chọn danh sách trong khối lệnh.");break;}
-        ui.speechBubble.textContent=list.items.join(", ")||"(danh sách trống)";
-        ui.speechBubble.classList.remove("thinking");ui.speechBubble.hidden=false;ui.actor.classList.add("speaking");
-        await delay(n("seconds",2,0,30)*1000);
-        if(isCurrentRun(token)){ui.speechBubble.hidden=true;ui.actor.classList.remove("speaking");}
-        break;
-      }
-      case "listAdd": {
-        const list=project.lists.find(item=>item.id===block.listId);
         if(list){if(list.items.length>=500)list.items.shift();list.items.push(safeText(block.item,"").slice(0,200));renderListValues();setUnsaved();}
         else notify("Hãy tạo danh sách trong mục Biến trước.");
         await delay(80);break;
@@ -515,6 +478,16 @@
         if(list){list.items.length=0;renderLists();renderListValues();setUnsaved();}
         else notify("Hãy chọn danh sách trong khối lệnh.");
         await delay(80);break;
+      }
+      case "listLength":
+      case "listItem": {
+        const list=project.lists.find(item=>item.id===block.listId);
+        if(!list){notify("Hãy chọn danh sách trong khối lệnh.");break;}
+        const message=block.type==="listLength" ? String(list.items.length) : String(list.items[n("index",1,1,500)-1]??"");
+        ui.speechBubble.textContent=message;ui.speechBubble.classList.remove("thinking");ui.speechBubble.hidden=false;ui.actor.classList.add("speaking");
+        await delay(n("seconds",2,0,30)*1000);
+        if(isCurrentRun(token)){ui.speechBubble.hidden=true;ui.actor.classList.remove("speaking");}
+        break;
       }
       case "listSay": {
         const list=project.lists.find(item=>item.id===block.listId);
