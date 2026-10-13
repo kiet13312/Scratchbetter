@@ -81,6 +81,7 @@
           <div class="scene-hill hill-back"></div><div class="scene-hill hill-front"></div>
           <div class="scene-ground"></div>
           <div id="variableMonitors" class="variable-monitors" aria-live="polite"></div>
+      <div id="listMonitors" class="list-monitors" aria-live="polite"></div>
           <div id="speechBubble" class="speech-bubble" hidden></div>
           <div id="actor" class="actor" role="img" aria-label="Nhân vật mèo" style="left:50%;top:50%"><span id="actorEmoji">🐱</span></div>
           <div class="stage-crosshair" aria-hidden="true"><i></i><i></i></div>
@@ -107,10 +108,11 @@
       <button id="closeVariablesBtn" class="dialog-close" type="button" aria-label="Đóng">×</button>
       <span class="eyebrow">DỮ LIỆU DỰ ÁN</span><h2 id="variablesTitle">Biến của bạn</h2>
       <p class="tool-description">Danh sách ban đầu để trống. Tự đặt tên từng biến cho dự án.</p>
-      <div id="variablesList" class="variables-list"></div>
-      <form id="createVariableForm" class="create-variable-form"><label for="newVariableName">Tên biến mới</label>
-        <div class="create-variable-row"><input id="newVariableName" maxlength="40" autocomplete="off" placeholder="Nhập tên biến…" required><button class="button button-primary" type="submit">＋ Tạo biến</button></div>
-      </form>
+      <div class="data-mode-tabs"><button id="variablesModeBtn" type="button" class="data-mode-tab active">Biến</button><button id="listsModeBtn" type="button" class="data-mode-tab">Danh sách</button></div>
+      <div id="variablesPanel"><div id="variablesList" class="variables-list"></div>
+      <form id="createVariableForm" class="create-variable-form"><label for="newVariableName">Tên biến mới</label><div class="create-variable-row"><input id="newVariableName" maxlength="40" autocomplete="off" placeholder="Nhập tên biến…" required><button class="button button-primary" type="submit">＋ Tạo biến</button></div></form></div>
+      <div id="listsPanel" hidden><div id="listsEditor" class="variables-list"></div>
+      <form id="createListForm" class="create-variable-form"><label for="newListName">Tên danh sách mới</label><div class="create-variable-row"><input id="newListName" maxlength="40" autocomplete="off" placeholder="Nhập tên danh sách…" required><button class="button button-primary" type="submit">＋ Tạo danh sách</button></div></form></div>
       <button id="doneVariablesBtn" class="button button-quiet dialog-action" type="button">Đóng</button>
     </section>
   </div>
