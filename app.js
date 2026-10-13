@@ -504,6 +504,126 @@
   $("createVariableForm").addEventListener("submit",event=>{event.preventDefault();const input=$("newVariableName"),name=safeText(input.value,"").trim();if(!name){notify("Hãy nhập tên biến.");return;}if(project.variables.some(v=>v.name.toLowerCase()===name.toLowerCase())){notify("Tên biến đã tồn tại.");return;}project.variables.push({id:"v"+idCounter++,name:name.slice(0,40),value:0,visible:true});input.value="";renderVariables();renderProgram();renderPalette();setUnsaved();notify("Đã tạo biến "+name);});
   $("closeVariablesBtn").addEventListener("click",()=>{$("variablesOverlay").hidden=true;});$("doneVariablesBtn").addEventListener("click",()=>{$("variablesOverlay").hidden=true;});
   $("variablesOverlay").addEventListener("click",event=>{if(event.target===$("variablesOverlay"))$("variablesOverlay").hidden=true;});
+  // Simple canvas paint editor; custom drawing is saved with the project.
+  const paintCanvas = $("paintCanvas");
+  const paintContext = paintCanvas.getContext("2d", { willReadFrequently: true });
+  let paintTool = "pencil";
+  let paintDrawing = false;
+  let paintStart = null;
+  let paintLast = null;
+  let paintBaseImage = null;
+  const paintUndo = [];
+
+  function paintPoint(event) {
+    const rect = paintCanvas.getBoundingClientRect();
+    return { x: (event.clientX - rect.left) * paintCanvas.width / rect.width, y: (event.clientY - rect.top) * paintCanvas.height / rect.height };
+  }
+  function paintSnapshot() {
+    try { paintUndo.push(paintContext.getImageData(0, 0, paintCanvas.width, paintCanvas.height)); if (paintUndo.length > 20) paintUndo.shift(); } catch (_) {}
+  }
+  function paintStyle() {
+    paintContext.lineWidth = Number($("paintSize").value) || 7;
+    paintContext.lineCap = "round"; paintContext.lineJoin = "round";
+    paintContext.strokeStyle = $("paintColor").value;
+  }
+  function paintShape(tool, start, end) {
+    paintStyle(); paintContext.globalCompositeOperation = "source-over"; paintContext.beginPath();
+    if (tool === "line") { paintContext.moveTo(start.x, start.y); paintContext.lineTo(end.x, end.y); paintContext.stroke(); }
+    else if (tool === "rect") { paintContext.strokeRect(start.x, start.y, end.x - start.x, end.y - start.y); }
+    else if (tool === "circle") { paintContext.arc(start.x, start.y, Math.hypot(end.x - start.x, end.y - start.y), 0, Math.PI * 2); paintContext.stroke(); }
+  }
+  function resetPaintCanvas() {
+    paintUndo.length = 0;
+    paintContext.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+    paintContext.fillStyle = "#fff"; paintContext.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+    if (project.customSprite) {
+      const image = new Image();
+      image.onload = () => { paintContext.clearRect(0, 0, paintCanvas.width, paintCanvas.height); paintContext.drawImage(image, 0, 0, paintCanvas.width, paintCanvas.height); };
+      image.src = project.customSprite;
+    }
+  }
+  function openPaint() { resetPaintCanvas(); $("paintOverlay").hidden = false; }
+  function closePaint() { $("paintOverlay").hidden = true; paintDrawing = false; }
+
+  document.querySelectorAll("[data-paint-tool]").forEach(button => button.addEventListener("click", () => {
+    paintTool = button.dataset.paintTool;
+    document.querySelectorAll("[data-paint-tool]").forEach(item => item.classList.toggle("active", item === button));
+  }));
+  paintCanvas.addEventListener("pointerdown", event => {
+    event.preventDefault(); paintCanvas.setPointerCapture(event.pointerId); paintDrawing = true;
+    paintStart = paintPoint(event); paintLast = paintStart; paintSnapshot();
+    paintBaseImage = paintContext.getImageData(0, 0, paintCanvas.width, paintCanvas.height);
+    if (paintTool === "pencil" || paintTool === "eraser") {
+      paintStyle(); paintContext.globalCompositeOperation = paintTool === "eraser" ? "destination-out" : "source-over";
+      paintContext.beginPath(); paintContext.moveTo(paintStart.x, paintStart.y); paintContext.lineTo(paintStart.x + 0.1, paintStart.y + 0.1);
+      paintContext.stroke(); paintContext.globalCompositeOperation = "source-over";
+    }
+  });
+  paintCanvas.addEventListener("pointermove", event => {
+    if (!paintDrawing) return;
+    const point = paintPoint(event);
+    if (paintTool === "pencil" || paintTool === "eraser") {
+      paintStyle(); paintContext.globalCompositeOperation = paintTool === "eraser" ? "destination-out" : "source-over";
+      paintContext.beginPath(); paintContext.moveTo(paintLast.x, paintLast.y); paintContext.lineTo(point.x, point.y);
+      paintContext.stroke(); paintContext.globalCompositeOperation = "source-over";
+    } else {
+      if (paintBaseImage) paintContext.putImageData(paintBaseImage, 0, 0);
+      paintShape(paintTool, paintStart, point);
+    }
+    paintLast = point;
+  });
+  function finishPaintStroke() { paintDrawing = false; paintBaseImage = null; }
+  paintCanvas.addEventListener("pointerup", finishPaintStroke);
+  paintCanvas.addEventListener("pointercancel", finishPaintStroke);
+  $("paintSize").addEventListener("input", () => { $("paintSizeValue").textContent = $("paintSize").value + " px"; });
+  $("undoPaintBtn").addEventListener("click", () => {
+    const previous = paintUndo.pop();
+    if (!previous) { notify("Không còn nét để hoàn tác."); return; }
+    paintContext.putImageData(previous, 0, 0);
+  });
+  $("clearPaintBtn").addEventListener("click", () => {
+    paintSnapshot(); paintContext.fillStyle = "#fff"; paintContext.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+  });
+  $("savePaintBtn").addEventListener("click", () => {
+    project.customSprite = paintCanvas.toDataURL("image/png");
+    actorState.sprite = "custom"; project.sprite = "custom";
+    setActorPosition(); setUnsaved(); closePaint(); notify("Đã lưu nhân vật tự vẽ vào dự án.");
+  });
+  $("paintBtn").addEventListener("click", openPaint);
+  $("closePaintBtn").addEventListener("click", closePaint);
+  $("cancelPaintBtn").addEventListener("click", closePaint);
+  $("paintOverlay").addEventListener("click", event => { if (event.target === $("paintOverlay")) closePaint(); });
+
+  // Offline tips for app features. The link in the dialog opens the real ChatGPT service.
+  function answerAssistant(question) {
+    const q = question.toLocaleLowerCase();
+    if (/(biến|điểm|score|variable|dữ liệu)/.test(q)) return "Mở nhóm “Biến” → “Tạo / chỉnh sửa biến” → nhập tên rồi Tạo biến. Thêm khối “đặt biến” hoặc “thay đổi biến”, chọn biến; bật “Hiện” để xem giá trị trên sân khấu.";
+    if (/(vẽ|nhân vật|bút|tẩy|hình)/.test(q)) return "Bấm “Vẽ”. Chọn Bút, Tẩy, Đường, HCN hoặc Tròn; chỉnh màu và độ dày; bấm “Lưu thành nhân vật”. Chọn 🎨 để sử dụng hình đó.";
+    if (/(lặp|repeat|vòng lặp)/.test(q)) return "Trong nhóm “Điều khiển”, thêm khối “lặp lại”, rồi kéo các khối cần lặp vào vùng trống bên trong khối lặp.";
+    if (/(lưu|xuất|mở|sao lưu|tệp)/.test(q)) return "“Lưu” cất dự án trên thiết bị. “Xuất” tải tệp .khoivui.json để sao lưu/chuyển máy; “Mở” nhập lại tệp đã xuất.";
+    if (/(chạy|dừng|lệnh|khối|code|mã)/.test(q)) return "Chạm một khối trong thư viện để thêm hoặc giữ và kéo vào vùng Mã lệnh. Kéo khối để đổi thứ tự, sửa giá trị trong khối rồi nhấn Chạy. Nút ■ dùng để dừng.";
+    if (/(rộng|màn hình|sân khấu|phóng)/.test(q)) return "Nhấn “Mở rộng” trên thanh trên để ẩn sân khấu và dành thêm chỗ cho mã lệnh; nhấn lại để hiện sân khấu.";
+    return "Mình chưa có câu trả lời offline phù hợp. Hỏi cụ thể về biến, khối lệnh, vẽ, chạy hoặc lưu dự án. Để hỏi AI tự do, bấm liên kết “Mở ChatGPT để hỏi AI trực tuyến”.";
+  }
+  function addAssistantMessage(message, role) {
+    const area = $("assistantMessages");
+    const item = document.createElement("div");
+    item.className = "assistant-message " + (role === "user" ? "assistant-user" : "assistant-reply");
+    item.textContent = message; area.appendChild(item); area.scrollTop = area.scrollHeight;
+  }
+  $("assistantBtn").addEventListener("click", () => { $("assistantOverlay").hidden = false; $("assistantQuestion").focus(); });
+  $("closeAssistantBtn").addEventListener("click", () => { $("assistantOverlay").hidden = true; });
+  $("closeAssistantFooterBtn").addEventListener("click", () => { $("assistantOverlay").hidden = true; });
+  $("assistantOverlay").addEventListener("click", event => { if (event.target === $("assistantOverlay")) $("assistantOverlay").hidden = true; });
+  $("assistantForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const input = $("assistantQuestion");
+    const question = safeText(input.value, "").trim();
+    if (!question) return;
+    addAssistantMessage(question, "user"); addAssistantMessage(answerAssistant(question), "assistant");
+    input.value = ""; input.focus();
+  });
+
   function openHelp() { ui.helpOverlay.hidden = false; }
   function closeHelp() { ui.helpOverlay.hidden = true; }
 
