@@ -62,7 +62,7 @@
     looks: ["say", "think", "show", "hide", "size", "costume", "backdrop"],
     control: ["wait", "repeat", "forever", "ifVar", "spin"],
     events: ["whenTap"],
-    data: ["setVar", "changeVar", "showVar", "hideVar", "sayVar"]
+    data: ["setVar", "changeVar", "showVar", "hideVar", "sayVar", "listAdd", "listDelete", "listInsert", "listReplace", "listClear", "listSay"]
   };
 
   const $ = id => document.getElementById(id);
@@ -73,7 +73,7 @@
     stageScene: $("stageScene"), actor: $("actor"), actorEmoji: $("actorEmoji"), actorName: $("actorName"),
     actorStatus: $("actorStatus"), statX: $("statX"), statY: $("statY"), statSize: $("statSize"),
     speechBubble: $("speechBubble"), runStatus: $("runStatus"), toast: $("toast"), fileInput: $("projectFileInput"),
-    helpOverlay: $("helpOverlay"), variablesOverlay: $("variablesOverlay"), variableMonitors: $("variableMonitors")
+    helpOverlay: $("helpOverlay"), variablesOverlay: $("variablesOverlay"), variableMonitors: $("variableMonitors"), listMonitors: $("listMonitors")
   };
 
   let idCounter = 1;
@@ -87,7 +87,7 @@
   let suppressClickUntil = 0;
   let pendingPointer = null;
   let actorState = { x: 0, y: 0, rotation: 0, size: 100, visible: true, sprite: "cat", costumeIndex: 0 };
-  let project = { version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [], customSprite: "" };
+  let project = { version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [], lists: [], customSprite: "" }
 
   const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
   const toNumber = (value, fallback, min, max) => {
@@ -102,7 +102,7 @@
     if (def.nested) block.children = [];
     return block;
   };
-  const initialProject = () => ({ version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [], customSprite: "" });
+  const initialProject = () => ({ version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [], lists: [], customSprite: "" });
 
   function notify(message) {
     ui.toast.textContent = message;
@@ -148,11 +148,11 @@
       const prefix = document.createElement("span"); prefix.textContent = field.prefix; wrap.appendChild(prefix);
     }
     let input;
-    if (field.type === "select" || field.type === "variable") {
+    if (field.type === "select" || field.type === "variable" || field.type === "list") {
       input = document.createElement("select"); input.className = "block-field variable-field";
-      input.setAttribute("aria-label", field.type === "variable" ? "Chọn biến" : field.key);
-      const options = field.type === "variable" ? project.variables.map(v => ({ value: v.id, label: v.name })) : field.options;
-      if (field.type === "variable" && !options.length) { const node=document.createElement("option");node.value="";node.textContent="tạo biến trước";node.disabled=true;input.appendChild(node); }
+      input.setAttribute("aria-label", field.type === "variable" ? "Chọn biến" : field.type === "list" ? "Chọn danh sách" : field.key);
+      const options = field.type === "variable" ? project.variables.map(v => ({ value: v.id, label: v.name })) : field.type === "list" ? project.lists.map(v => ({ value: v.id, label: v.name })) : field.options;
+      if ((field.type === "variable" || field.type === "list") && !options.length) { const node=document.createElement("option");node.value="";node.textContent=field.type === "list" ? "tạo danh sách trước" : "tạo biến trước";node.disabled=true;input.appendChild(node); }
       options.forEach(option => { const node=document.createElement("option");node.value=option.value;node.textContent=option.label;input.appendChild(node); });
       input.value = String(block[field.key] ?? field.value);
     } else {
@@ -244,7 +244,7 @@
       const text = document.createElement("span"); text.textContent = def.label;
       button.append(icon, text);
       def.fields.slice(0, 1).forEach(field => {
-        const summary = document.createElement("span"); summary.style.marginLeft = "auto"; summary.style.opacity = ".85"; summary.textContent = field.type === "text" ? "“…”" : field.type === "variable" ? "biến" : String(field.value) + (field.suffix || "");
+        const summary = document.createElement("span"); summary.style.marginLeft = "auto"; summary.style.opacity = ".85"; summary.textContent = field.type === "text" ? "“…”" : field.type === "variable" ? "biến" : field.type === "list" ? "danh sách" : String(field.value) + (field.suffix || "");
         button.appendChild(summary);
       });
       ui.paletteBlocks.appendChild(button);
@@ -688,6 +688,7 @@
     if (definition.type === "text") found.block[definition.key] = safeText(field.value, definition.value);
     else if (definition.type === "select") found.block[definition.key] = definition.options.some(item => item.value === field.value) ? field.value : definition.value;
     else if (definition.type === "variable") found.block[definition.key] = project.variables.some(item => item.id === field.value) ? field.value : "";
+    else if (definition.type === "list") found.block[definition.key] = project.lists.some(item => item.id === field.value) ? field.value : "";
     else found.block[definition.key] = toNumber(field.value, definition.value, definition.min ?? -999, definition.max ?? 999);
     if (definition.type === "number") field.value = String(found.block[definition.key]);
     setUnsaved();
