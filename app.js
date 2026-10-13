@@ -38,6 +38,12 @@
     wait: { category: "control", label: "đợi", icon: "◷", fields: [{ key: "seconds", type: "number", value: 1, suffix: "giây", min: 0, max: 30 }] },
     repeat: { category: "control", label: "lặp lại", icon: "⟳", fields: [{ key: "times", type: "number", value: 3, suffix: "lần", min: 1, max: 30 }], nested: true },
     spin: { category: "control", label: "xoay nhanh", icon: "✧", fields: [{ key: "times", type: "number", value: 4, suffix: "lần", min: 1, max: 20 }] },
+    forever: { category: "control", label: "liên tục", icon: "∞", fields: [], nested: true },
+    ifVar: { category: "control", label: "nếu biến", icon: "◆", fields: [
+      { key: "variableId", type: "variable", value: "" },
+      { key: "operator", type: "select", value: "eq", options: [{ value: "eq", label: "=" }, { value: "neq", label: "≠" }, { value: "gt", label: ">" }, { value: "lt", label: "<" }] },
+      { key: "testValue", type: "text", value: "0" }
+    ], nested: true },
     whenTap: { category: "events", label: "khi chạm nhân vật", icon: "☝", fields: [], nested: true },
     setVar: { category: "data", label: "đặt biến", icon: "＝", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "value", type: "text", value: "0", wide: true }] },
     changeVar: { category: "data", label: "thay đổi biến", icon: "＋", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "amount", type: "number", value: 1, min: -999999, max: 999999 }] },
@@ -48,7 +54,7 @@
   const paletteOrder = {
     motion: ["move", "turn", "goTo", "changeX", "changeY"],
     looks: ["say", "think", "show", "hide", "size", "costume", "backdrop"],
-    control: ["wait", "repeat", "spin"],
+    control: ["wait", "repeat", "forever", "ifVar", "spin"],
     events: ["whenTap"],
     data: ["setVar", "changeVar", "showVar", "hideVar", "sayVar"]
   };
@@ -380,6 +386,28 @@
       case "repeat": {
         const times = n("times", 3, 1, 30);
         for (let i = 0; i < times && isCurrentRun(token); i++) await runStack(block.children || [], token);
+        break;
+      }
+      case "forever": {
+        while (isCurrentRun(token)) {
+          await runStack(block.children || [], token);
+          await delay(80);
+        }
+        break;
+      }
+      case "ifVar": {
+        const v = project.variables.find(item => item.id === block.variableId);
+        if (!v) { notify("Hãy chọn biến trong khối nếu."); break; }
+        const leftText = String(v.value ?? "");
+        const rightText = String(block.testValue ?? "");
+        const bothNumeric = leftText.trim() !== "" && rightText.trim() !== "" && Number.isFinite(Number(leftText)) && Number.isFinite(Number(rightText));
+        const left = bothNumeric ? Number(leftText) : leftText;
+        const right = bothNumeric ? Number(rightText) : rightText;
+        const pass = block.operator === "eq" ? left === right
+          : block.operator === "neq" ? left !== right
+          : bothNumeric && block.operator === "gt" ? left > right
+          : bothNumeric && block.operator === "lt" ? left < right : false;
+        if (pass) await runStack(block.children || [], token);
         break;
       }
       case "spin": {
