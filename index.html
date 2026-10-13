@@ -36,6 +36,7 @@
           <button type="button" class="category-tab" data-category="looks"><span class="category-icon">◉</span><span>Hiển thị</span></button>
           <button type="button" class="category-tab" data-category="control"><span class="category-icon">⟳</span><span>Điều khiển</span></button>
           <button type="button" class="category-tab" data-category="events"><span class="category-icon">⚑</span><span>Sự kiện</span></button>
+          <button type="button" class="category-tab" data-category="data"><span class="category-icon">▦</span><span>Biến</span></button>
         </nav>
         <section class="palette-panel">
           <div class="panel-heading">
@@ -44,7 +45,7 @@
           </div>
           <p class="palette-hint">Chạm để thêm · kéo vào vùng mã lệnh</p>
           <div id="paletteBlocks" class="palette-list"></div>
-          <div class="palette-foot"><span class="small-dot"></span>Không cần kết nối mạng</div>
+          <div class="palette-foot"><span class="small-dot"></span><span id="paletteFootText">Không cần kết nối mạng</span><button id="manageVariablesBtn" class="manage-vars-button" type="button" hidden>＋ Tạo / chỉnh sửa biến</button></div>
         </section>
       </aside>
 
@@ -76,6 +77,7 @@
           <div class="scene-sun"></div><div class="scene-cloud cloud-one"></div><div class="scene-cloud cloud-two"></div>
           <div class="scene-hill hill-back"></div><div class="scene-hill hill-front"></div>
           <div class="scene-ground"></div>
+          <div id="variableMonitors" class="variable-monitors" aria-live="polite"></div>
           <div id="speechBubble" class="speech-bubble" hidden></div>
           <div id="actor" class="actor" role="img" aria-label="Nhân vật mèo" style="left:50%;top:50%"><span id="actorEmoji">🐱</span></div>
           <div class="stage-crosshair" aria-hidden="true"><i></i><i></i></div>
@@ -96,6 +98,18 @@
     </main>
   </div>
 
+  <div id="variablesOverlay" class="overlay" hidden>
+    <section class="tool-dialog variable-dialog" role="dialog" aria-modal="true" aria-labelledby="variablesTitle">
+      <button id="closeVariablesBtn" class="dialog-close" type="button" aria-label="Đóng">×</button>
+      <span class="eyebrow">DỮ LIỆU DỰ ÁN</span><h2 id="variablesTitle">Biến của bạn</h2>
+      <p class="tool-description">Danh sách ban đầu để trống. Tự đặt tên từng biến cho dự án.</p>
+      <div id="variablesList" class="variables-list"></div>
+      <form id="createVariableForm" class="create-variable-form"><label for="newVariableName">Tên biến mới</label>
+        <div class="create-variable-row"><input id="newVariableName" maxlength="40" autocomplete="off" placeholder="Nhập tên biến…" required><button class="button button-primary" type="submit">＋ Tạo biến</button></div>
+      </form>
+      <button id="doneVariablesBtn" class="button button-quiet dialog-action" type="button">Đóng</button>
+    </section>
+  </div>
   <input id="projectFileInput" type="file" accept=".khoivui,.json,application/json" hidden>
   <div id="toast" class="toast" role="status" hidden></div>
   <div id="helpOverlay" class="overlay" hidden>

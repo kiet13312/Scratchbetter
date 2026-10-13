@@ -18,7 +18,8 @@
     motion: { label: "Di chuyển", color: "#4286f5", icon: "↗" },
     looks: { label: "Hiển thị", color: "#9b62d8", icon: "◉" },
     control: { label: "Điều khiển", color: "#e6a33f", icon: "⟳" },
-    events: { label: "Sự kiện", color: "#34a981", icon: "⚑" }
+    events: { label: "Sự kiện", color: "#34a981", icon: "⚑" },
+    data: { label: "Biến", color: "#d99a31", icon: "▦" }
   };
   const defs = {
     move: { category: "motion", label: "di chuyển", icon: "↗", fields: [{ key: "steps", type: "number", value: 40, suffix: "bước", min: -500, max: 500 }] },
@@ -36,13 +37,17 @@
     wait: { category: "control", label: "đợi", icon: "◷", fields: [{ key: "seconds", type: "number", value: 1, suffix: "giây", min: 0, max: 30 }] },
     repeat: { category: "control", label: "lặp lại", icon: "⟳", fields: [{ key: "times", type: "number", value: 3, suffix: "lần", min: 1, max: 30 }], nested: true },
     spin: { category: "control", label: "xoay nhanh", icon: "✧", fields: [{ key: "times", type: "number", value: 4, suffix: "lần", min: 1, max: 20 }] },
-    whenTap: { category: "events", label: "khi chạm nhân vật", icon: "☝", fields: [], nested: true }
+    whenTap: { category: "events", label: "khi chạm nhân vật", icon: "☝", fields: [], nested: true },
+    setVar: { category: "data", label: "đặt biến", icon: "＝", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "value", type: "text", value: "0", wide: true }] },
+    changeVar: { category: "data", label: "thay đổi biến", icon: "＋", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "amount", type: "number", value: 1, min: -999999, max: 999999 }] },
+    sayVar: { category: "data", label: "nói giá trị biến", icon: "▤", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] }
   };
   const paletteOrder = {
     motion: ["move", "turn", "goTo", "changeX", "changeY"],
     looks: ["say", "think", "show", "hide", "size", "costume", "backdrop"],
     control: ["wait", "repeat", "spin"],
-    events: ["whenTap"]
+    events: ["whenTap"],
+    data: ["setVar", "changeVar", "sayVar"]
   };
 
   const $ = id => document.getElementById(id);
@@ -53,7 +58,7 @@
     stageScene: $("stageScene"), actor: $("actor"), actorEmoji: $("actorEmoji"), actorName: $("actorName"),
     actorStatus: $("actorStatus"), statX: $("statX"), statY: $("statY"), statSize: $("statSize"),
     speechBubble: $("speechBubble"), runStatus: $("runStatus"), toast: $("toast"), fileInput: $("projectFileInput"),
-    helpOverlay: $("helpOverlay")
+    helpOverlay: $("helpOverlay"), variablesOverlay: $("variablesOverlay"), variableMonitors: $("variableMonitors")
   };
 
   let idCounter = 1;
@@ -67,7 +72,7 @@
   let suppressClickUntil = 0;
   let pendingPointer = null;
   let actorState = { x: 0, y: 0, rotation: 0, size: 100, visible: true, sprite: "cat", costumeIndex: 0 };
-  let project = { version: 1, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [] };
+  let project = { version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [] };
 
   const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
   const toNumber = (value, fallback, min, max) => {
@@ -82,10 +87,7 @@
     if (def.nested) block.children = [];
     return block;
   };
-  const initialProject = () => ({
-    version: 1, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden",
-    blocks: [makeBlock("move"), makeBlock("turn"), makeBlock("say")]
-  });
+  const initialProject = () => ({ version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [] });
 
   function notify(message) {
     ui.toast.textContent = message;
@@ -131,13 +133,12 @@
       const prefix = document.createElement("span"); prefix.textContent = field.prefix; wrap.appendChild(prefix);
     }
     let input;
-    if (field.type === "select") {
-      input = document.createElement("select");
-      input.className = "block-field";
-      input.setAttribute("aria-label", field.key);
-      field.options.forEach(option => {
-        const node = document.createElement("option"); node.value = option.value; node.textContent = option.label; input.appendChild(node);
-      });
+    if (field.type === "select" || field.type === "variable") {
+      input = document.createElement("select"); input.className = "block-field variable-field";
+      input.setAttribute("aria-label", field.type === "variable" ? "Chọn biến" : field.key);
+      const options = field.type === "variable" ? project.variables.map(v => ({ value: v.id, label: v.name })) : field.options;
+      if (field.type === "variable" && !options.length) { const node=document.createElement("option");node.value="";node.textContent="tạo biến trước";node.disabled=true;input.appendChild(node); }
+      options.forEach(option => { const node=document.createElement("option");node.value=option.value;node.textContent=option.label;input.appendChild(node); });
       input.value = String(block[field.key] ?? field.value);
     } else {
       input = document.createElement("input");
@@ -228,11 +229,13 @@
       const text = document.createElement("span"); text.textContent = def.label;
       button.append(icon, text);
       def.fields.slice(0, 1).forEach(field => {
-        const summary = document.createElement("span"); summary.style.marginLeft = "auto"; summary.style.opacity = ".85"; summary.textContent = field.type === "text" ? "“…”" : String(field.value) + (field.suffix || "");
+        const summary = document.createElement("span"); summary.style.marginLeft = "auto"; summary.style.opacity = ".85"; summary.textContent = field.type === "text" ? "“…”" : field.type === "variable" ? "biến" : String(field.value) + (field.suffix || "");
         button.appendChild(summary);
       });
       ui.paletteBlocks.appendChild(button);
     });
+    $("manageVariablesBtn").hidden = activeCategory !== "data";
+    $("paletteFootText").textContent = activeCategory === "data" ? "Tạo biến trước khi dùng khối" : "Không cần kết nối mạng";
   }
 
   function findBlock(blocks, id, parent = "root") {
@@ -379,6 +382,24 @@
         }
         break;
       }
+      case "setVar": {
+        const v=project.variables.find(item=>item.id===block.variableId);
+        if(v){const raw=String(block.value??"");v.value=raw.trim()!==""&&Number.isFinite(Number(raw))?Number(raw):raw;renderVariableValues();}
+        else notify("Hãy tạo biến trong mục Biến trước.");
+        await delay(80);break;
+      }
+      case "changeVar": {
+        const v=project.variables.find(item=>item.id===block.variableId);
+        if(v){const cur=Number(v.value);v.value=(Number.isFinite(cur)?cur:0)+n("amount",1,-999999,999999);renderVariableValues();}
+        else notify("Hãy tạo biến trong mục Biến trước.");
+        await delay(100);break;
+      }
+      case "sayVar": {
+        const v=project.variables.find(item=>item.id===block.variableId);
+        if(!v){notify("Hãy chọn biến trong khối lệnh.");break;}
+        ui.speechBubble.textContent=String(v.value??0);ui.speechBubble.classList.remove("thinking");ui.speechBubble.hidden=false;ui.actor.classList.add("speaking");
+        await delay(n("seconds",2,0,30)*1000);if(isCurrentRun(token)){ui.speechBubble.hidden=true;ui.actor.classList.remove("speaking");}break;
+      }
       case "whenTap": actorTapHandlers.push({ block, token }); break;
     }
   }
@@ -425,34 +446,13 @@
   }
 
   function applyProject(data) {
-    if (!data || typeof data !== "object" || !Array.isArray(data.blocks)) throw new Error("Tệp dự án không hợp lệ.");
-    const cleanBlock = (item, depth = 0) => {
-      if (depth > 15 || !item || !defs[item.type]) return null;
-      const id = typeof item.id === "string" ? item.id.slice(0, 50) : "b" + idCounter++;
-      const match = /^b(\d+)$/.exec(id);
-      if (match) idCounter = Math.max(idCounter, Number(match[1]) + 1);
-      const result = { id, type: item.type };
-      defs[item.type].fields.forEach(field => {
-        if (field.type === "text") result[field.key] = safeText(item[field.key], field.value);
-        else if (field.type === "select") result[field.key] = field.options.some(option => option.value === item[field.key]) ? item[field.key] : field.value;
-        else result[field.key] = toNumber(item[field.key], field.value, field.min ?? -999, field.max ?? 999);
-      });
-      if (defs[item.type].nested) result.children = (Array.isArray(item.children) ? item.children : []).slice(0, 200).map(child => cleanBlock(child, depth + 1)).filter(Boolean);
-      return result;
-    };
-    idCounter = 1;
-    project = {
-      version: 1,
-      name: safeText(data.name, "Dự án của tôi").trim() || "Dự án của tôi",
-      sprite: Object.prototype.hasOwnProperty.call(sprites, data.sprite) ? data.sprite : "cat",
-      backdrop: backdrops.some(item => item.value === data.backdrop) ? data.backdrop : "garden",
-      blocks: data.blocks.slice(0, 500).map(item => cleanBlock(item)).filter(Boolean)
-    };
-    actorState.sprite = project.sprite;
-    ui.projectName.value = project.name;
-    ui.stageScene.dataset.backdrop = project.backdrop;
-    resetActor(true);
-    renderProgram(); setActorPosition(); saveToStorage(false);
+    if (!data || typeof data!=="object" || !Array.isArray(data.blocks)) throw new Error("Tệp dự án không hợp lệ.");
+    idCounter=1;const rawVars=Array.isArray(data.variables)?data.variables.slice(0,100):[];
+    const variables=[],ids=new Set(),names=new Set();
+    rawVars.forEach((item,i)=>{if(!item||typeof item!=="object")return;let id=typeof item.id==="string"?item.id.slice(0,50):"v"+(i+1);if(!id||ids.has(id))id="v"+(i+1);ids.add(id);let name=safeText(item.name,"").trim()||"Biến "+(i+1);if(names.has(name.toLowerCase()))return;names.add(name.toLowerCase());const m=/^v(\d+)$/.exec(id);if(m)idCounter=Math.max(idCounter,Number(m[1])+1);variables.push({id,name:name.slice(0,40),value:item.value??0,visible:item.visible!==false});});
+    const cleanBlock=(item,depth=0)=>{if(depth>15||!item||!defs[item.type])return null;const id=typeof item.id==="string"?item.id.slice(0,50):"b"+idCounter++;const m=/^b(\d+)$/.exec(id);if(m)idCounter=Math.max(idCounter,Number(m[1])+1);const result={id,type:item.type};defs[item.type].fields.forEach(field=>{if(field.type==="text")result[field.key]=safeText(item[field.key],field.value);else if(field.type==="select")result[field.key]=field.options.some(option=>option.value===item[field.key])?item[field.key]:field.value;else if(field.type==="variable")result[field.key]=variables.some(v=>v.id===item[field.key])?item[field.key]:"";else result[field.key]=toNumber(item[field.key],field.value,field.min??-999,field.max??999);});if(defs[item.type].nested)result.children=(Array.isArray(item.children)?item.children:[]).slice(0,200).map(child=>cleanBlock(child,depth+1)).filter(Boolean);return result;};
+    project={version:2,name:safeText(data.name,"Dự án của tôi").trim()||"Dự án của tôi",sprite:Object.prototype.hasOwnProperty.call(sprites,data.sprite)?data.sprite:"cat",backdrop:backdrops.some(item=>item.value===data.backdrop)?data.backdrop:"garden",blocks:data.blocks.slice(0,500).map(item=>cleanBlock(item)).filter(Boolean),variables};
+    actorState.sprite=project.sprite;ui.projectName.value=project.name;ui.stageScene.dataset.backdrop=project.backdrop;resetActor(true);renderProgram();renderVariables();setActorPosition();saveToStorage(false);
   }
 
   function exportProject() {
@@ -480,6 +480,25 @@
     } finally { ui.fileInput.value = ""; }
   }
 
+  function renderVariableValues(){
+    const list=$("variablesList");if(list)list.querySelectorAll("[data-var-value]").forEach(node=>{const v=project.variables.find(item=>item.id===node.dataset.varValue);if(v)node.textContent="Giá trị: "+String(v.value??0);});
+    const monitors=$("variableMonitors");if(monitors){monitors.replaceChildren();project.variables.filter(v=>v.visible!==false).forEach(v=>{const row=document.createElement("div");row.className="variable-monitor";const n=document.createElement("span");n.textContent=v.name;const val=document.createElement("strong");val.textContent=String(v.value??0);row.append(n,val);monitors.appendChild(row);});}
+  }
+  function renderVariables(){
+    const list=$("variablesList");list.replaceChildren();
+    if(!project.variables.length){const empty=document.createElement("div");empty.className="empty-state";empty.textContent="Chưa có biến nào. Nhập tên bên dưới rồi nhấn Tạo biến.";list.appendChild(empty);renderVariableValues();return;}
+    project.variables.forEach(v=>{const row=document.createElement("div");row.className="variable-row";const left=document.createElement("div");left.className="variable-row-main";const name=document.createElement("input");name.className="variable-name-input";name.value=v.name;name.maxLength=40;name.setAttribute("aria-label","Tên biến");
+      name.addEventListener("change",()=>{const val=safeText(name.value,"").trim();if(!val||project.variables.some(other=>other!==v&&other.name.toLowerCase()===val.toLowerCase())){name.value=v.name;notify("Tên biến trống hoặc đã tồn tại.");return;}v.name=val;name.value=val;renderProgram();renderVariableValues();setUnsaved();});
+      const value=document.createElement("small");value.dataset.varValue=v.id;value.textContent="Giá trị: "+String(v.value??0);left.append(name,value);
+      const right=document.createElement("div");right.className="variable-row-actions";const label=document.createElement("label");label.className="variable-show-label";const check=document.createElement("input");check.type="checkbox";check.checked=v.visible!==false;check.addEventListener("change",()=>{v.visible=check.checked;renderVariableValues();setUnsaved();});label.append(check,document.createTextNode("Hiện"));
+      const del=document.createElement("button");del.type="button";del.className="variable-delete";del.textContent="Xóa";del.addEventListener("click",()=>{if(!confirm("Xóa biến "+v.name+"?"))return;project.variables=project.variables.filter(x=>x!==v);const clear=arr=>arr.forEach(b=>{if(b.variableId===v.id)b.variableId="";if(b.children)clear(b.children);});clear(project.blocks);renderVariables();renderProgram();setUnsaved();});
+      right.append(label,del);row.append(left,right);list.appendChild(row);});renderVariableValues();
+  }
+  function openVariables(){renderVariables();$("newVariableName").value="";$("variablesOverlay").hidden=false;}
+  $("manageVariablesBtn").addEventListener("click",openVariables);
+  $("createVariableForm").addEventListener("submit",event=>{event.preventDefault();const input=$("newVariableName"),name=safeText(input.value,"").trim();if(!name){notify("Hãy nhập tên biến.");return;}if(project.variables.some(v=>v.name.toLowerCase()===name.toLowerCase())){notify("Tên biến đã tồn tại.");return;}project.variables.push({id:"v"+idCounter++,name:name.slice(0,40),value:0,visible:true});input.value="";renderVariables();renderProgram();renderPalette();setUnsaved();notify("Đã tạo biến "+name);});
+  $("closeVariablesBtn").addEventListener("click",()=>{$("variablesOverlay").hidden=true;});$("doneVariablesBtn").addEventListener("click",()=>{$("variablesOverlay").hidden=true;});
+  $("variablesOverlay").addEventListener("click",event=>{if(event.target===$("variablesOverlay"))$("variablesOverlay").hidden=true;});
   function openHelp() { ui.helpOverlay.hidden = false; }
   function closeHelp() { ui.helpOverlay.hidden = true; }
 
@@ -501,6 +520,7 @@
     if (!definition) return;
     if (definition.type === "text") found.block[definition.key] = safeText(field.value, definition.value);
     else if (definition.type === "select") found.block[definition.key] = definition.options.some(item => item.value === field.value) ? field.value : definition.value;
+    else if (definition.type === "variable") found.block[definition.key] = project.variables.some(item => item.id === field.value) ? field.value : "";
     else found.block[definition.key] = toNumber(field.value, definition.value, definition.min ?? -999, definition.max ?? 999);
     if (definition.type === "number") field.value = String(found.block[definition.key]);
     setUnsaved();
@@ -610,7 +630,7 @@
   ui.fileInput.addEventListener("change", () => importProject(ui.fileInput.files && ui.fileInput.files[0]));
   $("newProjectBtn").addEventListener("click", () => {
     project = initialProject(); actorState.sprite = "cat"; ui.projectName.value = project.name;
-    resetActor(false); renderProgram(); setActorPosition(); saveToStorage(false); notify("Đã tạo dự án mới.");
+    resetActor(false); renderProgram(); renderVariables(); renderPalette(); setActorPosition(); saveToStorage(false); notify("Dự án mới trống, chưa có khối lệnh hay biến.");
   });
   $("clearBlocksBtn").addEventListener("click", () => {
     if (!project.blocks.length) { notify("Vùng mã lệnh đang trống."); return; }
@@ -634,7 +654,7 @@
     } catch (error) {
       project = initialProject(); renderProgram(); setActorPosition(); saveToStorage(false);
     }
-    renderPalette();
+    renderPalette(); renderVariables();
   }
 
   loadStartup();
