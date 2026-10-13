@@ -1,0 +1,7 @@
+{
+  "name": "scratchbetter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal-focused Scratch 3 editor wrapper for Android",
+  "license": "AGPL-3.0-only"
+}
