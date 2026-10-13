@@ -1,0 +1,8 @@
+{
+  "appId": "com.kiet13312.scratchbetter",
+  "appName": "ScratchBetter",
+  "webDir": "site",
+  "server": {
+    "androidScheme": "https"
+  }
+}
