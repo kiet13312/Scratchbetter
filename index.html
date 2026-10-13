@@ -25,6 +25,9 @@
         <button id="saveBtn" class="button button-quiet" type="button" title="Lưu vào máy này">▣ <span>Lưu</span></button>
         <button id="exportBtn" class="button button-primary" type="button" title="Xuất tệp dự án">↓ <span>Xuất</span></button>
         <button id="importBtn" class="button button-quiet" type="button" title="Mở tệp dự án">↥ <span>Mở</span></button>
+        <button id="paintBtn" class="button button-quiet tool-top-button" type="button" title="Vẽ nhân vật">✎ <span>Vẽ</span></button>
+        <button id="workspaceExpandBtn" class="button button-quiet tool-top-button" type="button" aria-pressed="false" title="Mở rộng vùng mã lệnh">⛶ <span>Mở rộng</span></button>
+        <button id="assistantBtn" class="button button-quiet tool-top-button" type="button" title="Hỏi trợ lý">✦ <span>Trợ lý</span></button>
         <button id="helpBtn" class="help-button" type="button" aria-label="Hướng dẫn">?</button>
       </div>
     </header>
@@ -90,6 +93,7 @@
             <button type="button" class="sprite-choice" data-sprite="robot" aria-label="Rô-bốt Tí Hon">🤖</button>
             <button type="button" class="sprite-choice" data-sprite="astronaut" aria-label="Phi Hành Gia">🧑‍🚀</button>
             <button type="button" class="sprite-choice" data-sprite="fish" aria-label="Cá Bong Bóng">🐠</button>
+            <button type="button" class="sprite-choice custom-sprite-choice" data-sprite="custom" aria-label="Nhân vật tự vẽ" title="Nhân vật tự vẽ">🎨</button>
           </div>
           <div class="actor-stats"><span>X <b id="statX">0</b></span><span>Y <b id="statY">0</b></span><span>Cỡ <b id="statSize">100%</b></span></div>
         </div>
@@ -108,6 +112,33 @@
         <div class="create-variable-row"><input id="newVariableName" maxlength="40" autocomplete="off" placeholder="Nhập tên biến…" required><button class="button button-primary" type="submit">＋ Tạo biến</button></div>
       </form>
       <button id="doneVariablesBtn" class="button button-quiet dialog-action" type="button">Đóng</button>
+    </section>
+  </div>
+  <div id="paintOverlay" class="overlay paint-overlay" hidden>
+    <section class="tool-dialog paint-dialog" role="dialog" aria-modal="true" aria-labelledby="paintTitle">
+      <header class="tool-dialog-head"><div><span class="eyebrow">SÁNG TẠO NHÂN VẬT</span><h2 id="paintTitle">Trình vẽ nhân vật</h2><p class="tool-description">Vẽ bằng cảm ứng hoặc chuột rồi lưu để sử dụng trên sân khấu.</p></div><button id="closePaintBtn" class="dialog-close" type="button" aria-label="Đóng">×</button></header>
+      <div class="paint-layout"><div class="paint-tools">
+        <div class="paint-tool-row">
+          <button type="button" class="paint-tool active" data-paint-tool="pencil">✎ Bút</button><button type="button" class="paint-tool" data-paint-tool="eraser">▱ Tẩy</button>
+          <button type="button" class="paint-tool" data-paint-tool="line">／ Đường</button><button type="button" class="paint-tool" data-paint-tool="rect">□ HCN</button>
+          <button type="button" class="paint-tool" data-paint-tool="circle">○ Tròn</button>
+        </div>
+        <label class="paint-setting">Màu <input id="paintColor" type="color" value="#654ee8"></label>
+        <label class="paint-setting">Nét <input id="paintSize" type="range" min="1" max="36" value="7"><span id="paintSizeValue">7 px</span></label>
+        <div class="paint-actions"><button id="undoPaintBtn" class="button button-quiet" type="button">↶ Hoàn tác</button><button id="clearPaintBtn" class="button button-quiet" type="button">Xóa tranh</button></div>
+      </div><div class="paint-canvas-wrap"><canvas id="paintCanvas" width="320" height="320" aria-label="Vùng vẽ nhân vật"></canvas><p>Khung vẽ 320 × 320 · nền trắng</p></div></div>
+      <footer class="paint-footer"><button id="cancelPaintBtn" class="button button-quiet" type="button">Hủy</button><button id="savePaintBtn" class="button button-primary" type="button">✓ Lưu thành nhân vật</button></footer>
+    </section>
+  </div>
+  <div id="assistantOverlay" class="overlay" hidden>
+    <section class="tool-dialog assistant-dialog" role="dialog" aria-modal="true" aria-labelledby="assistantTitle">
+      <button id="closeAssistantBtn" class="dialog-close" type="button" aria-label="Đóng">×</button>
+      <span class="help-illustration" aria-hidden="true">✦</span><span class="eyebrow">TRỢ LÝ TRONG SCRATCHBETTER</span>
+      <h2 id="assistantTitle">Bạn đang mắc ở bước nào?</h2>
+      <p class="tool-description">Hỏi về biến, khối lệnh, vẽ nhân vật, chạy chương trình hoặc lưu dự án. Trợ lý hướng dẫn trong app hoạt động offline; để trò chuyện AI tự do, hãy mở ChatGPT.</p>
+      <div id="assistantMessages" class="assistant-messages" aria-live="polite"><div class="assistant-message assistant-reply">Chào bạn! Hãy mô tả phần bạn chưa hiểu, mình sẽ hướng dẫn các tính năng hiện có.</div></div>
+      <form id="assistantForm" class="assistant-form"><input id="assistantQuestion" placeholder="Ví dụ: tạo biến điểm thế nào?" autocomplete="off" maxlength="400" required><button class="button button-primary" type="submit">Gửi</button></form>
+      <div class="assistant-footer"><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Mở ChatGPT để hỏi AI trực tuyến ↗</a><button id="closeAssistantFooterBtn" class="button button-quiet" type="button">Đóng</button></div>
     </section>
   </div>
   <input id="projectFileInput" type="file" accept=".khoivui,.json,application/json" hidden>

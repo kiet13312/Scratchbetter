@@ -27,3 +27,30 @@
 .editor-layout.workspace-expanded .workspace{max-width:1100px}
 @media(min-width:1051px){.editor-layout{grid-template-columns:270px minmax(360px,1fr) minmax(320px,32%)}.workspace{max-width:1000px}}
 @media(max-width:680px){.editor-layout.workspace-expanded{grid-template-columns:160px minmax(0,1fr)}.editor-layout.workspace-expanded .code-panel{grid-template-columns:42px minmax(0,1fr)}}
+
+.tool-top-button{white-space:nowrap;min-height:31px;padding:0 9px!important;font-size:10px}
+.editor-layout.workspace-expanded{grid-template-columns:minmax(220px,260px) minmax(0,1fr)}
+.editor-layout.workspace-expanded .stage-panel{display:none}
+.editor-layout.workspace-expanded .workspace{max-width:1100px}
+.editor-layout.workspace-expanded .workspace-scroll{padding-left:clamp(14px,3vw,46px);padding-right:clamp(14px,3vw,46px)}
+.paint-overlay{padding:10px}.paint-dialog{width:min(950px,100%);padding:18px 20px;overflow:auto}
+.tool-dialog-head{position:relative;padding-right:38px}.tool-dialog-head .dialog-close{right:0;top:0}
+.paint-layout{display:grid;grid-template-columns:minmax(190px,250px) minmax(240px,1fr);gap:18px;align-items:center}
+.paint-tools{display:flex;flex-direction:column;gap:14px}.paint-tool-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.paint-tool{border:1px solid #e7e8f2;background:#fafaff;color:#656b83;padding:9px 8px;border-radius:9px;font-size:11px;font-weight:800}
+.paint-tool.active{border-color:#8a7bed;background:#f0edff;color:#5141c6}
+.paint-setting{display:grid;grid-template-columns:47px minmax(0,1fr) auto;gap:9px;align-items:center;color:#737890;font-size:11px;font-weight:750}
+.paint-setting input[type=color]{width:44px;height:32px;border:0;padding:2px}.paint-setting input[type=range]{width:100%;accent-color:#6655e8}
+.paint-actions{display:flex;gap:7px;flex-wrap:wrap}.paint-canvas-wrap{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+#paintCanvas{display:block;width:min(100%,min(45vh,440px));height:auto;aspect-ratio:1;border:1px solid #cdd1e1;border-radius:9px;background:#fff;touch-action:none;cursor:crosshair}
+.paint-canvas-wrap p{margin:0;color:#9a9eb0;font-size:10px}.paint-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #eff0f6}
+.assistant-dialog{width:min(600px,100%)}.assistant-dialog .help-illustration{margin-bottom:10px}
+.assistant-messages{height:min(34dvh,260px);overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid #eceef5;border-radius:12px;background:#f8f9fd}
+.assistant-message{max-width:92%;padding:10px 12px;border-radius:12px;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.assistant-reply{align-self:flex-start;background:white;border:1px solid #e7e9f1;color:#444962}.assistant-user{align-self:flex-end;background:#6655e8;color:white}
+.assistant-form{display:flex;gap:8px;margin-top:10px}.assistant-form input{min-width:0;flex:1;border:1px solid #dfe2ee;border-radius:10px;padding:10px 12px;font-size:12px}
+.assistant-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:13px;font-size:11px}.assistant-footer a{color:#6253d6;text-decoration:none;font-weight:800}
+.actor span img{display:block;width:100%;height:100%;object-fit:contain}
+@media(min-width:1051px){.editor-layout{grid-template-columns:270px minmax(360px,1fr) minmax(320px,32%)}.workspace{max-width:1000px}}
+@media(max-width:850px){.tool-top-button span{display:none}.tool-top-button{min-width:29px}.paint-layout{grid-template-columns:minmax(150px,200px) minmax(200px,1fr);gap:12px}.paint-dialog{padding:15px}}
+@media(max-width:680px){.tool-top-button{min-width:27px;min-height:28px}.editor-layout.workspace-expanded{grid-template-columns:160px minmax(0,1fr)}.editor-layout.workspace-expanded .code-panel{grid-template-columns:42px minmax(0,1fr)}.tool-dialog{padding:18px}.paint-layout{grid-template-columns:1fr}.paint-tools{gap:8px}.paint-tool-row{grid-template-columns:repeat(3,minmax(0,1fr))}.paint-setting{grid-template-columns:40px minmax(0,1fr) auto}#paintCanvas{width:min(100%,min(38vh,360px))}.paint-footer{position:sticky;bottom:0;background:white}.assistant-footer{align-items:flex-start;flex-wrap:wrap}}

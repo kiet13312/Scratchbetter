@@ -6,7 +6,8 @@
     cat: { name: "Mèo Mây", emoji: "🐱" },
     robot: { name: "Rô-bốt Tí Hon", emoji: "🤖" },
     astronaut: { name: "Phi Hành Gia", emoji: "🧑‍🚀" },
-    fish: { name: "Cá Bong Bóng", emoji: "🐠" }
+    fish: { name: "Cá Bong Bóng", emoji: "🐠" },
+    custom: { name: "Nhân vật tự vẽ", emoji: "🎨" }
   };
   const backdrops = [
     { value: "garden", label: "Vườn xanh" },
@@ -72,7 +73,7 @@
   let suppressClickUntil = 0;
   let pendingPointer = null;
   let actorState = { x: 0, y: 0, rotation: 0, size: 100, visible: true, sprite: "cat", costumeIndex: 0 };
-  let project = { version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [] };
+  let project = { version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [], customSprite: "" };
 
   const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
   const toNumber = (value, fallback, min, max) => {
@@ -87,7 +88,7 @@
     if (def.nested) block.children = [];
     return block;
   };
-  const initialProject = () => ({ version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [] });
+  const initialProject = () => ({ version: 2, name: "Dự án đầu tiên", sprite: "cat", backdrop: "garden", blocks: [], variables: [], customSprite: "" });
 
   function notify(message) {
     ui.toast.textContent = message;
@@ -314,8 +315,12 @@
     ui.actor.style.top = clamp(ny, 3, 94) + "%";
     ui.actor.style.transform = "translate(-50%,-50%) rotate(" + actorState.rotation + "deg) scale(" + (actorState.size / 100) + ")";
     ui.actor.style.opacity = actorState.visible ? "1" : "0";
-    ui.actorEmoji.textContent = sprites[actorState.sprite].emoji;
-    ui.actorName.textContent = sprites[actorState.sprite].name;
+    if (actorState.sprite === "custom" && project.customSprite) {
+      let image = ui.actorEmoji.querySelector("img");
+      if (!image) { ui.actorEmoji.replaceChildren(); image = document.createElement("img"); image.alt = "Nhân vật tự vẽ"; ui.actorEmoji.appendChild(image); }
+      image.src = project.customSprite;
+    } else { ui.actorEmoji.textContent = (sprites[actorState.sprite] || sprites.cat).emoji; }
+    ui.actorName.textContent = (sprites[actorState.sprite] || sprites.cat).name;
     ui.statX.textContent = Math.round(actorState.x);
     ui.statY.textContent = Math.round(actorState.y);
     ui.statSize.textContent = Math.round(actorState.size) + "%";
@@ -451,7 +456,7 @@
     const variables=[],ids=new Set(),names=new Set();
     rawVars.forEach((item,i)=>{if(!item||typeof item!=="object")return;let id=typeof item.id==="string"?item.id.slice(0,50):"v"+(i+1);if(!id||ids.has(id))id="v"+(i+1);ids.add(id);let name=safeText(item.name,"").trim()||"Biến "+(i+1);if(names.has(name.toLowerCase()))return;names.add(name.toLowerCase());const m=/^v(\d+)$/.exec(id);if(m)idCounter=Math.max(idCounter,Number(m[1])+1);variables.push({id,name:name.slice(0,40),value:item.value??0,visible:item.visible!==false});});
     const cleanBlock=(item,depth=0)=>{if(depth>15||!item||!defs[item.type])return null;const id=typeof item.id==="string"?item.id.slice(0,50):"b"+idCounter++;const m=/^b(\d+)$/.exec(id);if(m)idCounter=Math.max(idCounter,Number(m[1])+1);const result={id,type:item.type};defs[item.type].fields.forEach(field=>{if(field.type==="text")result[field.key]=safeText(item[field.key],field.value);else if(field.type==="select")result[field.key]=field.options.some(option=>option.value===item[field.key])?item[field.key]:field.value;else if(field.type==="variable")result[field.key]=variables.some(v=>v.id===item[field.key])?item[field.key]:"";else result[field.key]=toNumber(item[field.key],field.value,field.min??-999,field.max??999);});if(defs[item.type].nested)result.children=(Array.isArray(item.children)?item.children:[]).slice(0,200).map(child=>cleanBlock(child,depth+1)).filter(Boolean);return result;};
-    project={version:2,name:safeText(data.name,"Dự án của tôi").trim()||"Dự án của tôi",sprite:Object.prototype.hasOwnProperty.call(sprites,data.sprite)?data.sprite:"cat",backdrop:backdrops.some(item=>item.value===data.backdrop)?data.backdrop:"garden",blocks:data.blocks.slice(0,500).map(item=>cleanBlock(item)).filter(Boolean),variables};
+    project={version:2,name:safeText(data.name,"Dự án của tôi").trim()||"Dự án của tôi",sprite:Object.prototype.hasOwnProperty.call(sprites,data.sprite)?data.sprite:"cat",backdrop:backdrops.some(item=>item.value===data.backdrop)?data.backdrop:"garden",blocks:data.blocks.slice(0,500).map(item=>cleanBlock(item)).filter(Boolean),variables,customSprite:typeof data.customSprite==="string"&&/^data:image\/png;base64,/.test(data.customSprite)&&data.customSprite.length<1500000?data.customSprite:""};
     actorState.sprite=project.sprite;ui.projectName.value=project.name;ui.stageScene.dataset.backdrop=project.backdrop;resetActor(true);renderProgram();renderVariables();setActorPosition();saveToStorage(false);
   }
 
@@ -641,6 +646,12 @@
     actorState.sprite = button.dataset.sprite; project.sprite = actorState.sprite; setActorPosition(); setUnsaved();
   }));
   $("helpBtn").addEventListener("click", openHelp);
+  $("workspaceExpandBtn").addEventListener("click", () => {
+    const expanded = document.querySelector(".editor-layout").classList.toggle("workspace-expanded");
+    $("workspaceExpandBtn").setAttribute("aria-pressed", String(expanded));
+    $("workspaceExpandBtn").querySelector("span").textContent = expanded ? "Hiện sân khấu" : "Mở rộng";
+    $("workspaceExpandBtn").title = expanded ? "Hiện lại sân khấu" : "Mở rộng vùng mã lệnh";
+  });
   $("closeHelpBtn").addEventListener("click", closeHelp);
   $("gotItBtn").addEventListener("click", closeHelp);
   ui.helpOverlay.addEventListener("click", event => { if (event.target === ui.helpOverlay) closeHelp(); });
