@@ -49,7 +49,13 @@
     changeVar: { category: "data", label: "thay đổi biến", icon: "＋", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "amount", type: "number", value: 1, min: -999999, max: 999999 }] },
     showVar: { category: "data", label: "hiện biến", icon: "◉", fields: [{ key: "variableId", type: "variable", value: "" }] },
     hideVar: { category: "data", label: "ẩn biến", icon: "⊘", fields: [{ key: "variableId", type: "variable", value: "" }] },
-    sayVar: { category: "data", label: "nói giá trị biến", icon: "▤", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] }
+    sayVar: { category: "data", label: "nói giá trị biến", icon: "▤", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] },
+    listAdd: { category: "data", label: "thêm vào danh sách", icon: "＋", fields: [{ key: "listId", type: "list", value: "" }, { key: "item", type: "text", value: "mục mới", wide: true }] },
+    listDelete: { category: "data", label: "xóa mục", icon: "−", fields: [{ key: "listId", type: "list", value: "" }, { key: "index", type: "number", value: 1, min: 1, max: 500, suffix: "vị trí" }] },
+    listInsert: { category: "data", label: "chèn vào vị trí", icon: "↳", fields: [{ key: "listId", type: "list", value: "" }, { key: "item", type: "text", value: "mục mới", wide: true }, { key: "index", type: "number", value: 1, min: 1, max: 500 }] },
+    listReplace: { category: "data", label: "thay mục", icon: "↻", fields: [{ key: "listId", type: "list", value: "" }, { key: "index", type: "number", value: 1, min: 1, max: 500 }, { key: "item", type: "text", value: "mục mới", wide: true }] },
+    listClear: { category: "data", label: "xóa hết danh sách", icon: "▤", fields: [{ key: "listId", type: "list", value: "" }] },
+    listSay: { category: "data", label: "nói nội dung danh sách", icon: "☰", fields: [{ key: "listId", type: "list", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] }
   };
   const paletteOrder = {
     motion: ["move", "turn", "goTo", "changeX", "changeY"],
