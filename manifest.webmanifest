@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "ScratchBetter",
+  "short_name": "ScratchBetter",
+  "description": "Tạo và chỉnh sửa dự án Scratch riêng trên thiết bị của bạn.",
+  "lang": "vi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#f7f6fc",
+  "theme_color": "#5738b7",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
