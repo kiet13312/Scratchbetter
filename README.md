@@ -1,22 +1,13 @@
 # ScratchBetter
 
-ScratchBetter là ứng dụng lập trình bằng khối lệnh được viết riêng cho dự án này. Ứng dụng không nhúng Scratch Editor và không tải mã nguồn Scratch trong lúc build.
+App lập trình bằng khối lệnh độc lập, giao diện tiếng Việt và engine tự viết; không nhúng Scratch Editor.
 
-## Hiện có
+- Dự án mới trống, không tạo sẵn khối lệnh hay biến.
+- Quản lý biến: tạo, đổi tên, xóa, bật/tắt hiển thị; khối đặt/thay đổi/hiện/ẩn/nói giá trị biến và chỉnh giá trị trực tiếp trên sân khấu.
+- Trình vẽ nhân vật bằng cảm ứng/chuột: bút, tẩy, đường, hình chữ nhật, hình tròn, màu, độ dày, hoàn tác và xóa tranh.
+- Tự lưu, xuất/nhập dự án; mở rộng vùng mã lệnh để tận dụng diện tích màn hình.
+- Trợ lý hướng dẫn offline, có liên kết mở ChatGPT để hỏi AI trực tuyến tự do.
 
-- Giao diện tiếng Việt được tối ưu cho điện thoại đặt ngang.
-- Thêm khối bằng cách chạm, kéo thả bằng cảm ứng hoặc chuột, và sắp xếp lại thứ tự lệnh.
-- Khối di chuyển, xoay, đổi tọa độ, nói/suy nghĩ, hiện/ẩn, đổi cỡ, đổi dáng, đổi phông, đợi, lặp lại và sự kiện chạm nhân vật.
-- Vòng lặp và sự kiện có vùng riêng để thả những khối cần thực thi.
-- Sân khấu xem trước, bốn nhân vật biểu tượng, bốn phông nền và nút chạy/dừng/đặt lại.
-- Tự lưu trong bộ nhớ ứng dụng; xuất/mở bản sao dự án dạng JSON.
-- Có thể chạy offline sau khi cài app.
+Build Android: workflow **Build ScratchBetter APK**, artifact **ScratchBetter-landscape-debug-apk**.
 
-## Build APK Android
-
-1. Mở tab Actions của repo.
-2. Chọn workflow **Build ScratchBetter APK**.
-3. Chọn **Run workflow** hoặc mở lần chạy tự động sau commit.
-4. Khi hoàn tất thành công, tải artifact **ScratchBetter-landscape-debug-apk**.
-
-Đây là bản debug dùng thử cá nhân. ScratchBetter là dự án độc lập; giao diện, bộ khối, trình chạy lệnh và phần sân khấu do dự án tự viết. Đây không phải ứng dụng chính thức của Scratch.
+Đây là bản debug thử nghiệm. Dự án đã có các chức năng chính nêu trên nhưng chưa tương đương đầy đủ 100% Scratch gốc.

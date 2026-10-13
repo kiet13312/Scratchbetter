@@ -54,3 +54,5 @@
 @media(min-width:1051px){.editor-layout{grid-template-columns:270px minmax(360px,1fr) minmax(320px,32%)}.workspace{max-width:1000px}}
 @media(max-width:850px){.tool-top-button span{display:none}.tool-top-button{min-width:29px}.paint-layout{grid-template-columns:minmax(150px,200px) minmax(200px,1fr);gap:12px}.paint-dialog{padding:15px}}
 @media(max-width:680px){.tool-top-button{min-width:27px;min-height:28px}.editor-layout.workspace-expanded{grid-template-columns:160px minmax(0,1fr)}.editor-layout.workspace-expanded .code-panel{grid-template-columns:42px minmax(0,1fr)}.tool-dialog{padding:18px}.paint-layout{grid-template-columns:1fr}.paint-tools{gap:8px}.paint-tool-row{grid-template-columns:repeat(3,minmax(0,1fr))}.paint-setting{grid-template-columns:40px minmax(0,1fr) auto}#paintCanvas{width:min(100%,min(38vh,360px))}.paint-footer{position:sticky;bottom:0;background:white}.assistant-footer{align-items:flex-start;flex-wrap:wrap}}
+
+.variable-monitor-value{border:0;border-radius:5px;padding:2px 5px;background:#fff;color:#24263d;font:inherit;font-weight:900;max-width:110px;overflow:hidden;text-overflow:ellipsis}.variable-monitor-value:active{background:#f4e7ab}

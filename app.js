@@ -41,6 +41,8 @@
     whenTap: { category: "events", label: "khi chạm nhân vật", icon: "☝", fields: [], nested: true },
     setVar: { category: "data", label: "đặt biến", icon: "＝", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "value", type: "text", value: "0", wide: true }] },
     changeVar: { category: "data", label: "thay đổi biến", icon: "＋", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "amount", type: "number", value: 1, min: -999999, max: 999999 }] },
+    showVar: { category: "data", label: "hiện biến", icon: "◉", fields: [{ key: "variableId", type: "variable", value: "" }] },
+    hideVar: { category: "data", label: "ẩn biến", icon: "⊘", fields: [{ key: "variableId", type: "variable", value: "" }] },
     sayVar: { category: "data", label: "nói giá trị biến", icon: "▤", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "seconds", type: "number", value: 2, suffix: "giây", min: 0, max: 30 }] }
   };
   const paletteOrder = {
@@ -48,7 +50,7 @@
     looks: ["say", "think", "show", "hide", "size", "costume", "backdrop"],
     control: ["wait", "repeat", "spin"],
     events: ["whenTap"],
-    data: ["setVar", "changeVar", "sayVar"]
+    data: ["setVar", "changeVar", "showVar", "hideVar", "sayVar"]
   };
 
   const $ = id => document.getElementById(id);
@@ -399,6 +401,12 @@
         else notify("Hãy tạo biến trong mục Biến trước.");
         await delay(100);break;
       }
+      case "showVar": {
+        const v=project.variables.find(item=>item.id===block.variableId);if(v){v.visible=true;renderVariableValues();}else notify("Hãy chọn biến trong khối lệnh.");await delay(80);break;
+      }
+      case "hideVar": {
+        const v=project.variables.find(item=>item.id===block.variableId);if(v){v.visible=false;renderVariableValues();}else notify("Hãy chọn biến trong khối lệnh.");await delay(80);break;
+      }
       case "sayVar": {
         const v=project.variables.find(item=>item.id===block.variableId);
         if(!v){notify("Hãy chọn biến trong khối lệnh.");break;}
@@ -487,7 +495,7 @@
 
   function renderVariableValues(){
     const list=$("variablesList");if(list)list.querySelectorAll("[data-var-value]").forEach(node=>{const v=project.variables.find(item=>item.id===node.dataset.varValue);if(v)node.textContent="Giá trị: "+String(v.value??0);});
-    const monitors=$("variableMonitors");if(monitors){monitors.replaceChildren();project.variables.filter(v=>v.visible!==false).forEach(v=>{const row=document.createElement("div");row.className="variable-monitor";const n=document.createElement("span");n.textContent=v.name;const val=document.createElement("strong");val.textContent=String(v.value??0);row.append(n,val);monitors.appendChild(row);});}
+    const monitors=$("variableMonitors");if(monitors){monitors.replaceChildren();project.variables.filter(v=>v.visible!==false).forEach(v=>{const row=document.createElement("div");row.className="variable-monitor";const n=document.createElement("span");n.textContent=v.name;const val=document.createElement("button");val.type="button";val.className="variable-monitor-value";val.textContent=String(v.value??0);val.title="Chạm để chỉnh giá trị";val.addEventListener("click",()=>{const next=prompt("Giá trị của "+v.name,String(v.value??0));if(next===null)return;const raw=next.trim();v.value=raw!==""&&Number.isFinite(Number(raw))?Number(raw):next;renderVariableValues();renderVariables();setUnsaved();});row.append(n,val);monitors.appendChild(row);});}
   }
   function renderVariables(){
     const list=$("variablesList");list.replaceChildren();
