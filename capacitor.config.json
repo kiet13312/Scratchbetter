@@ -1,6 +1,6 @@
 {
   "appId": "com.kiet13312.scratchbetter",
-  "appName": "Khoi Vui",
+  "appName": "ScratchBetter",
   "webDir": "site",
   "server": {
     "androidScheme": "https"

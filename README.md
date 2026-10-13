@@ -1,6 +1,6 @@
-# Khối Vui
+# ScratchBetter
 
-Khối Vui là ứng dụng lập trình bằng khối lệnh được viết riêng cho dự án này. Ứng dụng không nhúng Scratch Editor và không tải mã nguồn Scratch trong lúc build.
+ScratchBetter là ứng dụng lập trình bằng khối lệnh được viết riêng cho dự án này. Ứng dụng không nhúng Scratch Editor và không tải mã nguồn Scratch trong lúc build.
 
 ## Hiện có
 
@@ -15,8 +15,8 @@ Khối Vui là ứng dụng lập trình bằng khối lệnh được viết ri
 ## Build APK Android
 
 1. Mở tab Actions của repo.
-2. Chọn workflow **Build Khoi Vui APK**.
+2. Chọn workflow **Build ScratchBetter APK**.
 3. Chọn **Run workflow** hoặc mở lần chạy tự động sau commit.
-4. Khi hoàn tất thành công, tải artifact **KhoiVui-landscape-debug-apk**.
+4. Khi hoàn tất thành công, tải artifact **ScratchBetter-landscape-debug-apk**.
 
-Đây là bản debug dùng thử cá nhân. Khối Vui là dự án độc lập; giao diện, bộ khối, trình chạy lệnh và phần sân khấu do dự án tự viết. Đây không phải ứng dụng chính thức của Scratch.
+Đây là bản debug dùng thử cá nhân. ScratchBetter là dự án độc lập; giao diện, bộ khối, trình chạy lệnh và phần sân khấu do dự án tự viết. Đây không phải ứng dụng chính thức của Scratch.
