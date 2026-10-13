@@ -1,13 +1,24 @@
 # ScratchBetter
 
-App lập trình bằng khối lệnh độc lập, giao diện tiếng Việt và engine tự viết; không nhúng Scratch Editor.
+Ứng dụng lập trình bằng khối lệnh độc lập, giao diện tiếng Việt và engine tự viết; không nhúng Scratch Editor.
 
-- Dự án mới trống, không tạo sẵn khối lệnh hay biến.
-- Quản lý biến: tạo, đổi tên, xóa, bật/tắt hiển thị; khối đặt/thay đổi/hiện/ẩn/nói giá trị biến và chỉnh giá trị trực tiếp trên sân khấu.
-- Trình vẽ nhân vật bằng cảm ứng/chuột: bút, tẩy, đường, hình chữ nhật, hình tròn, màu, độ dày, hoàn tác và xóa tranh.
-- Tự lưu, xuất/nhập dự án; mở rộng vùng mã lệnh để tận dụng diện tích màn hình.
-- Trợ lý hướng dẫn offline, có liên kết mở ChatGPT để hỏi AI trực tuyến tự do.
+## Dữ liệu kiểu Scratch
+- Dự án mới để trống: không điền sẵn khối lệnh, biến hay danh sách.
+- Biến: tạo, đổi tên, xóa, hiện/ẩn; khối đặt/thay đổi/hiện/ẩn/nói giá trị biến. Chạm giá trị trên sân khấu để chỉnh trực tiếp.
+- Danh sách: tạo danh sách trống, đổi tên, thêm/sửa/xóa mục, hiện/ẩn, thêm/chèn/thay/xóa toàn bộ, đọc một mục hoặc độ dài danh sách bằng khối lệnh.
+- Điều khiển: lặp lại, lặp liên tục có thể dừng, và điều kiện kiểm tra biến bằng/khác/lớn hơn/nhỏ hơn một giá trị.
+- Biến và danh sách được lưu cùng dự án và đi theo khi xuất/nhập JSON.
 
-Build Android: workflow **Build ScratchBetter APK**, artifact **ScratchBetter-landscape-debug-apk**.
+## Vẽ nhân vật
+- Vẽ bằng cảm ứng hoặc chuột: bút, tẩy, đường thẳng, hình chữ nhật, hình tròn, đổi màu và độ dày, hoàn tác, xóa tranh.
+- Nhập ảnh PNG/JPG/WebP do bạn vẽ bằng Canva hoặc ứng dụng khác; căn ảnh vào khung và lưu thành nhân vật để dùng trên sân khấu.
 
-Đây là bản debug thử nghiệm. Dự án đã có các chức năng chính nêu trên nhưng chưa tương đương đầy đủ 100% Scratch gốc.
+## Làm việc
+- Chế độ mở rộng ẩn sân khấu để tăng diện tích mã lệnh.
+- Trợ lý hướng dẫn offline có liên kết mở ChatGPT để hỏi AI trực tuyến tự do.
+- Tự lưu trên máy; xuất/nhập dự án JSON.
+
+## APK Android
+Workflow: **Build ScratchBetter APK**. Artifact: **ScratchBetter-landscape-debug-apk**.
+
+Đây là bản debug thử nghiệm của engine riêng. Chức năng biến, danh sách, vẽ và điều khiển đã được thêm; ứng dụng vẫn chưa tương đương đầy đủ 100% Scratch gốc.
