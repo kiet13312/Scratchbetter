@@ -44,6 +44,8 @@
       { key: "operator", type: "select", value: "eq", options: [{ value: "eq", label: "=" }, { value: "neq", label: "≠" }, { value: "gt", label: ">" }, { value: "lt", label: "<" }] },
       { key: "testValue", type: "text", value: "0" }
     ], nested: true },
+    whenFlag: { category: "events", label: "khi bấm Chạy", icon: "⚑", fields: [], nested: true },
+    whenKey: { category: "events", label: "khi bấm phím", icon: "⌨", fields: [{ key: "key", type: "select", value: "ArrowRight", options: [{ value: "ArrowRight", label: "mũi tên phải" }, { value: "ArrowLeft", label: "mũi tên trái" }, { value: "ArrowUp", label: "mũi tên lên" }, { value: "ArrowDown", label: "mũi tên xuống" }, { value: " ", label: "cách" }, { value: "Enter", label: "Enter" }] }], nested: true },
     whenTap: { category: "events", label: "khi chạm nhân vật", icon: "☝", fields: [], nested: true },
     setVar: { category: "data", label: "đặt biến", icon: "＝", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "value", type: "text", value: "0", wide: true }] },
     changeVar: { category: "data", label: "thay đổi biến", icon: "＋", fields: [{ key: "variableId", type: "variable", value: "" }, { key: "amount", type: "number", value: 1, min: -999999, max: 999999 }] },
@@ -63,7 +65,7 @@
     motion: ["move", "turn", "goTo", "changeX", "changeY"],
     looks: ["say", "think", "show", "hide", "size", "costume", "backdrop"],
     control: ["wait", "repeat", "forever", "ifVar", "spin"],
-    events: ["whenTap"],
+    events: ["whenFlag", "whenKey", "whenTap"],
     data: ["setVar", "changeVar", "showVar", "hideVar", "sayVar", "listAdd", "listDelete", "listInsert", "listReplace", "listClear", "listSay", "listLength", "listItem"]
   };
 
@@ -85,7 +87,9 @@
   let running = false;
   let currentRunPromise = null;
   let actorTapHandlers = [];
+  let keyHandlers = [];
   let actorTapBusy = false;
+  let keyBusy = false;
   let suppressClickUntil = 0;
   let pendingPointer = null;
   let actorState = { x: 0, y: 0, rotation: 0, size: 100, visible: true, sprite: "cat", costumeIndex: 0 };
@@ -498,6 +502,8 @@
         if(isCurrentRun(token)){ui.speechBubble.hidden=true;ui.actor.classList.remove("speaking");}
         break;
       }
+      case "whenFlag": await runStack(block.children || [], token); break;
+      case "whenKey": keyHandlers.push({ block, token, key: block.key || "ArrowRight" }); break;
       case "whenTap": actorTapHandlers.push({ block, token }); break;
     }
   }
@@ -513,6 +519,7 @@
     if (running) stopProgram(false);
     resetActor(true);
     actorTapHandlers = [];
+    keyHandlers = [];
     running = true;
     const token = ++runToken;
     ui.runBtn.disabled = true;
@@ -959,6 +966,16 @@
     if (pendingPointer?.ghost) pendingPointer.ghost.remove();
     if (pendingPointer?.sourceEl) pendingPointer.sourceEl.classList.remove("dragging-source");
     pendingPointer = null;
+  });
+
+  window.addEventListener("keydown", async event => {
+    const handlers = keyHandlers.filter(item => isCurrentRun(item.token) && item.key === event.key);
+    if (!handlers.length || keyBusy) return;
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(event.key)) event.preventDefault();
+    keyBusy = true;
+    try {
+      for (const item of handlers) if (isCurrentRun(item.token)) await runStack(item.block.children || [], item.token);
+    } finally { keyBusy = false; }
   });
 
   ui.actor.addEventListener("click", async () => {
