@@ -1,0 +1,93 @@
+name: Build ScratchBetter APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout ScratchBetter
+        uses: actions/checkout@v4
+
+      - name: Checkout open-source Scratch editor
+        uses: actions/checkout@v4
+        with:
+          repository: scratchfoundation/scratch-editor
+          ref: 0207c22d62b654cc3a28300b633c66fabf1de4d4
+          path: engine
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: engine/package-lock.json
+
+      - name: Install Scratch editor dependencies
+        working-directory: engine
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Scratch editor
+        working-directory: engine
+        run: npm run build
+
+      - name: Assemble app web files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site/editor
+          cp -a engine/packages/scratch-gui/build/. site/editor/
+          cp index.html app.css app.js manifest.webmanifest sw.js icon.svg offline.html site/
+          cp editor-home.js site/editor/
+          cp engine/LICENSE site/LICENSE-SCRATCH-EDITOR.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("site/editor/index.html")
+          html = path.read_text(encoding="utf-8")
+          html = html.replace("<title>Scratch 3.0 GUI</title>", "<title>ScratchBetter Editor</title>")
+          if "./editor-home.js" not in html:
+              html = html.replace("</body>", '<script src="./editor-home.js"></script>\n</body>')
+          path.write_text(html, encoding="utf-8")
+          PY
+          touch site/.nojekyll
+          cat > site/UPSTREAM-SOURCE.md <<'EOF'
+          ScratchBetter includes a build of Scratch Editor from Scratch Foundation.
+          Upstream repository: https://github.com/scratchfoundation/scratch-editor
+          Source commit: 0207c22d62b654cc3a28300b633c66fabf1de4d4
+          License: AGPL-3.0-only. See LICENSE-SCRATCH-EDITOR.txt.
+          ScratchBetter is an independent project and is not endorsed by Scratch Foundation or MIT.
+          EOF
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Capacitor tooling
+        run: npm install --no-save --no-audit --no-fund @capacitor/cli@7 @capacitor/core@7 @capacitor/android@7
+
+      - name: Generate Android wrapper
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScratchBetter-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
