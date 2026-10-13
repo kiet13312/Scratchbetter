@@ -2,11 +2,119 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ScratchBetter — mã nguồn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="Khối Vui — lắp ghép chương trình bằng khối lệnh, tạo chuyển động và hoạt cảnh.">
+  <title>Khối Vui — Lập trình kéo thả</title>
+  <link rel="stylesheet" href="./app.css">
 </head>
 <body>
-  <p>ScratchBetter đóng gói trình biên tập Scratch 3 trực tiếp làm màn hình chính. Mã nguồn giao diện được lấy trong workflow build từ <a href="https://github.com/scratchfoundation/scratch-editor">Scratch Editor</a>.</p>
-  <p><a href="https://github.com/kiet13312/Scratchbetter/actions">Mở GitHub Actions để build APK</a>.</p>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="Khối Vui">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Khối Vui</span>
+      </div>
+      <div class="project-title-wrap">
+        <span class="title-label">DỰ ÁN</span>
+        <input id="projectName" class="project-name" aria-label="Tên dự án" maxlength="60" value="Dự án đầu tiên">
+      </div>
+      <div id="saveState" class="save-state" role="status"><span class="status-dot"></span>Đã lưu trên máy</div>
+      <div class="top-actions">
+        <button id="newProjectBtn" class="button button-quiet" type="button" title="Tạo dự án mới">＋ <span>Mới</span></button>
+        <button id="saveBtn" class="button button-quiet" type="button" title="Lưu vào máy này">▣ <span>Lưu</span></button>
+        <button id="exportBtn" class="button button-primary" type="button" title="Xuất tệp dự án">↓ <span>Xuất</span></button>
+        <button id="importBtn" class="button button-quiet" type="button" title="Mở tệp dự án">↥ <span>Mở</span></button>
+        <button id="helpBtn" class="help-button" type="button" aria-label="Hướng dẫn">?</button>
+      </div>
+    </header>
+
+    <main class="editor-layout">
+      <aside class="code-panel" aria-label="Danh mục khối lệnh">
+        <nav id="categoryTabs" class="category-rail" aria-label="Nhóm khối lệnh">
+          <button type="button" class="category-tab active" data-category="motion"><span class="category-icon">↗</span><span>Di chuyển</span></button>
+          <button type="button" class="category-tab" data-category="looks"><span class="category-icon">◉</span><span>Hiển thị</span></button>
+          <button type="button" class="category-tab" data-category="control"><span class="category-icon">⟳</span><span>Điều khiển</span></button>
+          <button type="button" class="category-tab" data-category="events"><span class="category-icon">⚑</span><span>Sự kiện</span></button>
+        </nav>
+        <section class="palette-panel">
+          <div class="panel-heading">
+            <div><span class="eyebrow">THƯ VIỆN</span><h1 id="paletteTitle">Di chuyển</h1></div>
+            <span class="drag-symbol" aria-hidden="true">⠿</span>
+          </div>
+          <p class="palette-hint">Chạm để thêm · kéo vào vùng mã lệnh</p>
+          <div id="paletteBlocks" class="palette-list"></div>
+          <div class="palette-foot"><span class="small-dot"></span>Không cần kết nối mạng</div>
+        </section>
+      </aside>
+
+      <section id="workspacePanel" class="workspace-panel" aria-label="Vùng lập trình">
+        <div class="section-head workspace-head">
+          <div><span class="eyebrow">LẮP GHÉP</span><h2>Mã lệnh</h2></div>
+          <div class="workspace-tools"><span id="blockCount" class="block-count">0 khối</span><button id="clearBlocksBtn" class="mini-button" type="button">Xóa khối</button></div>
+        </div>
+        <div class="workspace-instruction"><span class="hint-icon">✦</span> Ghép khối bên trái thành một chuỗi lệnh. Nhấn <b>Chạy</b> để xem kết quả.</div>
+        <div id="workspaceScroll" class="workspace-scroll">
+          <div id="workspace" class="workspace">
+            <div class="start-block"><span class="flag-icon">⚑</span><span>Khi bấm nút Chạy</span><span class="start-tag">BẮT ĐẦU</span></div>
+            <div id="programBlocks" class="program-stack"></div>
+          </div>
+        </div>
+        <div class="workspace-footer"><span class="footer-key">↕</span> Giữ phần đầu khối để sắp xếp lại</div>
+      </section>
+
+      <aside class="stage-panel" aria-label="Sân khấu xem trước">
+        <div class="section-head stage-head">
+          <div><span class="eyebrow">XEM THỬ</span><h2>Sân khấu</h2></div>
+          <div class="stage-actions">
+            <button id="runBtn" class="run-button" type="button" title="Chạy chương trình"><span>▶</span> Chạy</button>
+            <button id="stopBtn" class="stop-button" type="button" title="Dừng chương trình" aria-label="Dừng">■</button>
+            <button id="resetBtn" class="reset-button" type="button" title="Đặt lại nhân vật" aria-label="Đặt lại">↺</button>
+          </div>
+        </div>
+        <div id="stageScene" class="stage-scene" data-backdrop="garden">
+          <div class="scene-sun"></div><div class="scene-cloud cloud-one"></div><div class="scene-cloud cloud-two"></div>
+          <div class="scene-hill hill-back"></div><div class="scene-hill hill-front"></div>
+          <div class="scene-ground"></div>
+          <div id="speechBubble" class="speech-bubble" hidden></div>
+          <div id="actor" class="actor" role="img" aria-label="Nhân vật mèo" style="left:50%;top:50%"><span id="actorEmoji">🐱</span></div>
+          <div class="stage-crosshair" aria-hidden="true"><i></i><i></i></div>
+          <div class="scene-caption">SÂN KHẤU CỦA BẠN</div>
+        </div>
+        <div class="actor-card">
+          <div class="actor-card-title"><div><span class="eyebrow">NHÂN VẬT</span><strong id="actorName">Mèo Mây</strong></div><span id="actorStatus" class="actor-status">Sẵn sàng</span></div>
+          <div class="sprite-picker" aria-label="Chọn nhân vật">
+            <button type="button" class="sprite-choice active" data-sprite="cat" aria-label="Mèo Mây">🐱</button>
+            <button type="button" class="sprite-choice" data-sprite="robot" aria-label="Rô-bốt Tí Hon">🤖</button>
+            <button type="button" class="sprite-choice" data-sprite="astronaut" aria-label="Phi Hành Gia">🧑‍🚀</button>
+            <button type="button" class="sprite-choice" data-sprite="fish" aria-label="Cá Bong Bóng">🐠</button>
+          </div>
+          <div class="actor-stats"><span>X <b id="statX">0</b></span><span>Y <b id="statY">0</b></span><span>Cỡ <b id="statSize">100%</b></span></div>
+        </div>
+        <div class="stage-bottom"><span class="online-dot"></span><span id="runStatus">Sẵn sàng chạy chương trình</span></div>
+      </aside>
+    </main>
+  </div>
+
+  <input id="projectFileInput" type="file" accept=".khoivui,.json,application/json" hidden>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="helpOverlay" class="overlay" hidden>
+    <section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <button id="closeHelpBtn" class="dialog-close" type="button" aria-label="Đóng">×</button>
+      <span class="help-illustration" aria-hidden="true">🧩</span>
+      <span class="eyebrow">HƯỚNG DẪN NHANH</span>
+      <h2 id="helpTitle">Cùng tạo chương trình đầu tiên</h2>
+      <ol>
+        <li>Chọn nhóm khối lệnh ở thanh bên trái.</li>
+        <li>Chạm một khối để thêm, hoặc giữ rồi kéo vào vùng <b>Mã lệnh</b>.</li>
+        <li>Kéo các khối lên xuống để đổi thứ tự. Khối <b>lặp lại</b> nhận thêm khối bên trong.</li>
+        <li>Nhấn <b>Chạy</b> để xem nhân vật làm theo lệnh.</li>
+        <li>Nhấn <b>Lưu</b> để lưu trong app, hoặc <b>Xuất</b> để có tệp sao lưu.</li>
+      </ol>
+      <button id="gotItBtn" class="button button-primary dialog-action" type="button">Hiểu rồi</button>
+    </section>
+  </div>
+
+  <script src="./app.js" defer></script>
 </body>
 </html>
