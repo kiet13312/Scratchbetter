@@ -609,9 +609,31 @@
   }
 
   function renderVariableValues(){
-    const list=$("variablesList");if(list)list.querySelectorAll("[data-var-value]").forEach(node=>{const v=project.variables.find(item=>item.id===node.dataset.varValue);if(v)node.textContent="Giá trị: "+String(v.value??0);});
-    const monitors=$("variableMonitors");if(monitors){monitors.replaceChildren();project.variables.filter(v=>v.visible!==false).forEach(v=>{const row=document.createElement("div");row.className="variable-monitor";const n=document.createElement("span");n.textContent=v.name;const val=document.createElement("button");val.type="button";val.className="variable-monitor-value";val.textContent=String(v.value??0);val.title="Chạm để chỉnh giá trị";val.addEventListener("click",()=>{const next=prompt("Giá trị của "+v.name,String(v.value??0));if(next===null)return;const raw=next.trim();v.value=raw!==""&&Number.isFinite(Number(raw))?Number(raw):next;renderVariableValues();renderVariables();setUnsaved();});row.append(n,val);monitors.appendChild(row);});}
+    const editor=$("variablesList");
+    if(editor)editor.querySelectorAll("[data-var-value]").forEach(node=>{
+      const variable=project.variables.find(item=>item.id===node.dataset.varValue);
+      if(variable)node.textContent="Giá trị: "+String(variable.value??0);
+    });
+    const monitors=$("variableMonitors");
+    if(monitors){
+      monitors.replaceChildren();
+      project.variables.filter(item=>item.visible!==false).forEach(variable=>{
+        const row=document.createElement("div");row.className="variable-monitor";
+        const name=document.createElement("span");name.textContent=variable.name;
+        const value=document.createElement("button");value.type="button";value.className="variable-monitor-value";
+        value.textContent=String(variable.value??0);value.title="Chạm để chỉnh giá trị";
+        value.addEventListener("click",()=>{
+          const next=prompt("Giá trị của "+variable.name,String(variable.value??0));
+          if(next===null)return;
+          const raw=next.trim();variable.value=raw!==""&&Number.isFinite(Number(raw))?Number(raw):next;
+          renderVariableValues();renderVariables();setUnsaved();
+        });
+        row.append(name,value);monitors.appendChild(row);
+      });
+    }
+    renderListValues();
   }
+
   function renderVariables(){
     const list=$("variablesList");list.replaceChildren();
     if(!project.variables.length){const empty=document.createElement("div");empty.className="empty-state";empty.textContent="Chưa có biến nào. Nhập tên bên dưới rồi nhấn Tạo biến.";list.appendChild(empty);renderVariableValues();return;}
@@ -622,11 +644,103 @@
       const del=document.createElement("button");del.type="button";del.className="variable-delete";del.textContent="Xóa";del.addEventListener("click",()=>{if(!confirm("Xóa biến "+v.name+"?"))return;project.variables=project.variables.filter(x=>x!==v);const clear=arr=>arr.forEach(b=>{if(b.variableId===v.id)b.variableId="";if(b.children)clear(b.children);});clear(project.blocks);renderVariables();renderProgram();setUnsaved();});
       right.append(label,del);row.append(left,right);list.appendChild(row);});renderVariableValues();
   }
-  function openVariables(){renderVariables();$("newVariableName").value="";$("variablesOverlay").hidden=false;}
+  function openVariables(){$("variablesOverlay").hidden=false;switchDataMode("variables");}
   $("manageVariablesBtn").addEventListener("click",openVariables);
   $("createVariableForm").addEventListener("submit",event=>{event.preventDefault();const input=$("newVariableName"),name=safeText(input.value,"").trim();if(!name){notify("Hãy nhập tên biến.");return;}if(project.variables.some(v=>v.name.toLowerCase()===name.toLowerCase())){notify("Tên biến đã tồn tại.");return;}project.variables.push({id:"v"+idCounter++,name:name.slice(0,40),value:0,visible:true});input.value="";renderVariables();renderProgram();renderPalette();setUnsaved();notify("Đã tạo biến "+name);});
   $("closeVariablesBtn").addEventListener("click",()=>{$("variablesOverlay").hidden=true;});$("doneVariablesBtn").addEventListener("click",()=>{$("variablesOverlay").hidden=true;});
   $("variablesOverlay").addEventListener("click",event=>{if(event.target===$("variablesOverlay"))$("variablesOverlay").hidden=true;});
+  function renderListValues(){
+    const monitors=$("listMonitors");
+    if(monitors){
+      monitors.replaceChildren();
+      project.lists.filter(list=>list.visible!==false).forEach(list=>{
+        const panel=document.createElement("div");panel.className="list-monitor";
+        const heading=document.createElement("strong");heading.textContent=list.name+" ("+list.items.length+")";panel.appendChild(heading);
+        const entries=document.createElement("ol");
+        list.items.slice(0,40).forEach(value=>{const item=document.createElement("li");item.textContent=String(value);entries.appendChild(item);});
+        if(list.items.length>40){const item=document.createElement("li");item.textContent="… "+(list.items.length-40)+" mục nữa";entries.appendChild(item);}
+        panel.appendChild(entries);monitors.appendChild(panel);
+      });
+    }
+    const editor=$("listsEditor");
+    if(editor)editor.querySelectorAll("[data-list-count]").forEach(node=>{
+      const list=project.lists.find(item=>item.id===node.dataset.listCount);
+      if(list)node.textContent=list.items.length+" mục";
+    });
+  }
+
+  function renderLists(){
+    const editor=$("listsEditor");editor.replaceChildren();
+    if(!project.lists.length){
+      const empty=document.createElement("div");empty.className="empty-state";
+      empty.textContent="Chưa có danh sách nào. Nhập tên bên dưới để tạo danh sách trống.";
+      editor.appendChild(empty);renderListValues();return;
+    }
+    project.lists.forEach(list=>{
+      const card=document.createElement("div");card.className="list-editor-row";
+      const head=document.createElement("div");head.className="list-editor-head";
+      const name=document.createElement("input");name.className="list-editor-name";name.value=list.name;
+      name.maxLength=40;name.setAttribute("aria-label","Tên danh sách");
+      name.addEventListener("change",()=>{
+        const value=safeText(name.value,"").trim();
+        if(!value||project.lists.some(other=>other!==list&&other.name.toLowerCase()===value.toLowerCase())){
+          name.value=list.name;notify("Tên danh sách trống hoặc đã tồn tại.");return;
+        }
+        list.name=value;name.value=value;renderProgram();renderPalette();renderListValues();setUnsaved();
+      });
+      const count=document.createElement("small");count.dataset.listCount=list.id;count.textContent=list.items.length+" mục";
+      const label=document.createElement("label");label.className="variable-show-label";
+      const check=document.createElement("input");check.type="checkbox";check.checked=list.visible!==false;
+      check.addEventListener("change",()=>{list.visible=check.checked;renderListValues();setUnsaved();});
+      label.append(check,document.createTextNode("Hiện"));
+      const remove=document.createElement("button");remove.type="button";remove.className="variable-delete";remove.textContent="Xóa";
+      remove.addEventListener("click",()=>{
+        if(!confirm("Xóa danh sách "+list.name+"?"))return;
+        project.lists=project.lists.filter(item=>item!==list);
+        const clear=blocks=>blocks.forEach(block=>{if(block.listId===list.id)block.listId="";if(block.children)clear(block.children);});
+        clear(project.blocks);renderLists();renderProgram();renderPalette();setUnsaved();
+      });
+      head.append(name,count,label,remove);
+      const items=document.createElement("div");items.className="list-items";
+      list.items.forEach((value,index)=>{
+        const row=document.createElement("div");row.className="list-item-edit";
+        const input=document.createElement("input");input.value=String(value);input.maxLength=200;
+        input.setAttribute("aria-label","Mục "+(index+1));
+        input.addEventListener("change",()=>{list.items[index]=safeText(input.value,"").slice(0,200);renderListValues();setUnsaved();});
+        const deleteItem=document.createElement("button");deleteItem.type="button";deleteItem.textContent="×";deleteItem.title="Xóa mục";
+        deleteItem.addEventListener("click",()=>{list.items.splice(index,1);renderLists();setUnsaved();});
+        row.append(input,deleteItem);items.appendChild(row);
+      });
+      const add=document.createElement("button");add.type="button";add.className="mini-button";add.textContent="＋ Thêm mục";
+      add.addEventListener("click",()=>{
+        if(list.items.length>=500){notify("Danh sách tối đa 500 mục.");return;}
+        list.items.push("");renderLists();renderListValues();setUnsaved();
+      });
+      card.append(head,items,add);editor.appendChild(card);
+    });
+    renderListValues();
+  }
+
+  function switchDataMode(mode){
+    const variablesMode=mode!=="lists";
+    $("variablesPanel").hidden=!variablesMode;$("listsPanel").hidden=variablesMode;
+    $("variablesModeBtn").classList.toggle("active",variablesMode);
+    $("listsModeBtn").classList.toggle("active",!variablesMode);
+    $("variablesTitle").textContent=variablesMode?"Biến của bạn":"Danh sách của bạn";
+    $("newVariableName").value="";$("newListName").value="";
+    if(variablesMode)renderVariables();else renderLists();
+  }
+  $("variablesModeBtn").addEventListener("click",()=>switchDataMode("variables"));
+  $("listsModeBtn").addEventListener("click",()=>switchDataMode("lists"));
+  $("createListForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    const input=$("newListName");const name=safeText(input.value,"").trim();
+    if(!name){notify("Hãy nhập tên danh sách.");return;}
+    if(project.lists.some(list=>list.name.toLowerCase()===name.toLowerCase())){notify("Tên danh sách đã tồn tại.");return;}
+    project.lists.push({id:"l"+idCounter++,name:name.slice(0,40),items:[],visible:true});
+    input.value="";renderLists();renderListValues();renderProgram();renderPalette();setUnsaved();notify("Đã tạo danh sách "+name);
+  });
+
   // Simple canvas paint editor; custom drawing is saved with the project.
   const paintCanvas = $("paintCanvas");
   const paintContext = paintCanvas.getContext("2d", { willReadFrequently: true });
