@@ -794,6 +794,29 @@
   $("clearPaintBtn").addEventListener("click", () => {
     paintSnapshot(); paintContext.fillStyle = "#fff"; paintContext.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
   });
+  $("importSpriteImageBtn").addEventListener("click", () => $("spriteImageInput").click());
+  $("spriteImageInput").addEventListener("change", () => {
+    const file=$("spriteImageInput").files?.[0];
+    if(!file)return;
+    $("spriteImageInput").value="";
+    if(!/^image\/(png|jpeg|webp)$/.test(file.type)||file.size>8*1024*1024){notify("Chọn ảnh PNG, JPG hoặc WebP nhỏ hơn 8 MB.");return;}
+    const reader=new FileReader();
+    reader.onerror=()=>notify("Không đọc được ảnh này.");
+    reader.onload=()=>{
+      const image=new Image();
+      image.onerror=()=>notify("Tệp ảnh không hợp lệ.");
+      image.onload=()=>{
+        paintSnapshot();
+        paintContext.fillStyle="#fff";paintContext.fillRect(0,0,paintCanvas.width,paintCanvas.height);
+        const scale=Math.min(paintCanvas.width/image.width,paintCanvas.height/image.height);
+        const width=image.width*scale,height=image.height*scale;
+        paintContext.drawImage(image,(paintCanvas.width-width)/2,(paintCanvas.height-height)/2,width,height);
+        notify("Đã nhập ảnh. Nhấn “Lưu thành nhân vật” để sử dụng.");
+      };
+      image.src=String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
   $("savePaintBtn").addEventListener("click", () => {
     project.customSprite = paintCanvas.toDataURL("image/png");
     actorState.sprite = "custom"; project.sprite = "custom";

@@ -127,7 +127,7 @@
         </div>
         <label class="paint-setting">Màu <input id="paintColor" type="color" value="#654ee8"></label>
         <label class="paint-setting">Nét <input id="paintSize" type="range" min="1" max="36" value="7"><span id="paintSizeValue">7 px</span></label>
-        <div class="paint-actions"><button id="undoPaintBtn" class="button button-quiet" type="button">↶ Hoàn tác</button><button id="clearPaintBtn" class="button button-quiet" type="button">Xóa tranh</button></div>
+        <div class="paint-actions"><button id="undoPaintBtn" class="button button-quiet" type="button">↶ Hoàn tác</button><button id="clearPaintBtn" class="button button-quiet" type="button">Xóa tranh</button><button id="importSpriteImageBtn" class="button button-quiet" type="button">＋ Nhập ảnh</button></div>
       </div><div class="paint-canvas-wrap"><canvas id="paintCanvas" width="320" height="320" aria-label="Vùng vẽ nhân vật"></canvas><p>Khung vẽ 320 × 320 · nền trắng</p></div></div>
       <footer class="paint-footer"><button id="cancelPaintBtn" class="button button-quiet" type="button">Hủy</button><button id="savePaintBtn" class="button button-primary" type="button">✓ Lưu thành nhân vật</button></footer>
     </section>
@@ -143,6 +143,7 @@
       <div class="assistant-footer"><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Mở ChatGPT để hỏi AI trực tuyến ↗</a><button id="closeAssistantFooterBtn" class="button button-quiet" type="button">Đóng</button></div>
     </section>
   </div>
+  <input id="spriteImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
   <input id="projectFileInput" type="file" accept=".khoivui,.json,application/json" hidden>
   <div id="toast" class="toast" role="status" hidden></div>
   <div id="helpOverlay" class="overlay" hidden>
