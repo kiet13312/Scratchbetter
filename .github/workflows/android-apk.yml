@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-android:
-    name: Build debug APK
+    name: Build Scratch Editor for Android (landscape)
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -39,28 +39,37 @@ jobs:
         working-directory: engine
         run: npm run build
 
-      - name: Assemble app web files
+      - name: Put the real Scratch editor on the app home screen
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p site/editor
-          cp -a engine/packages/scratch-gui/build/. site/editor/
-          cp index.html app.css app.js manifest.webmanifest sw.js icon.svg offline.html site/
-          cp editor-home.js site/editor/
+          test -f engine/packages/scratch-gui/build/index.html
+          mkdir -p site
+          # Put editor files at the web root so /static/... assets resolve correctly.
+          cp -a engine/packages/scratch-gui/build/. site/
+          cp editor-home.js site/editor-home.js
           cp engine/LICENSE site/LICENSE-SCRATCH-EDITOR.txt
           python3 - <<'PY'
+          import re
           from pathlib import Path
-          path = Path("site/editor/index.html")
+
+          path = Path("site/index.html")
           html = path.read_text(encoding="utf-8")
-          html = html.replace("<title>Scratch 3.0 GUI</title>", "<title>ScratchBetter Editor</title>")
+          html = re.sub(r"<title>.*?</title>", "<title>ScratchBetter</title>", html, count=1, flags=re.I | re.S)
+          viewport = '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">'
+          if re.search(r'<meta\s+name=["\']viewport["\']', html, flags=re.I):
+              html = re.sub(r'<meta\s+name=["\']viewport["\'][^>]*>', viewport, html, count=1, flags=re.I)
+          else:
+              html = re.sub(r"</head>", f"  {viewport}\n</head>", html, count=1, flags=re.I)
           if "./editor-home.js" not in html:
-              html = html.replace("</body>", '<script src="./editor-home.js"></script>\n</body>')
+              html = re.sub(r"</body>", '  <script src="./editor-home.js"></script>\n</body>', html, count=1, flags=re.I)
+          if "./editor-home.js" not in html:
+              raise SystemExit("Could not add ScratchBetter mobile help script to editor.")
           path.write_text(html, encoding="utf-8")
           PY
-          touch site/.nojekyll
           cat > site/UPSTREAM-SOURCE.md <<'EOF'
-          ScratchBetter includes a build of Scratch Editor from Scratch Foundation.
-          Upstream repository: https://github.com/scratchfoundation/scratch-editor
+          ScratchBetter embeds the open-source Scratch Editor.
+          Upstream: https://github.com/scratchfoundation/scratch-editor
           Source commit: 0207c22d62b654cc3a28300b633c66fabf1de4d4
           License: AGPL-3.0-only. See LICENSE-SCRATCH-EDITOR.txt.
           ScratchBetter is an independent project and is not endorsed by Scratch Foundation or MIT.
@@ -80,6 +89,32 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Force landscape orientation on Android
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          if not path.exists():
+              raise SystemExit("AndroidManifest.xml not found after Capacitor setup.")
+          ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+          android = "{http://schemas.android.com/apk/res/android}"
+          tree = ET.parse(path)
+          root = tree.getroot()
+          activities = [
+              item for item in root.findall(".//activity")
+              if "MainActivity" in item.get(android + "name", "")
+          ]
+          if not activities:
+              raise SystemExit("Capacitor MainActivity was not found in AndroidManifest.xml.")
+          for activity in activities:
+              activity.set(android + "screenOrientation", "sensorLandscape")
+          ET.indent(tree, space="    ")
+          tree.write(path, encoding="utf-8", xml_declaration=True)
+          print("MainActivity locked to landscape.")
+          PY
+
       - name: Build APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
@@ -87,7 +122,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: ScratchBetter-debug-apk
+          name: ScratchBetter-landscape-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14

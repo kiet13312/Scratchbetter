@@ -2,106 +2,11 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#5738b7">
-  <meta name="description" content="ScratchBetter — tạo và chỉnh sửa dự án Scratch riêng trên thiết bị của bạn.">
-  <title>ScratchBetter</title>
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./app.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScratchBetter — mã nguồn</title>
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="./" aria-label="ScratchBetter — Trang chủ">
-      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span>Scratch<span class="brand-light">Better</span></span>
-    </a>
-    <span class="local-badge"><span class="status-dot"></span>Dùng cá nhân</span>
-  </header>
-
-  <main class="page">
-    <section class="hero">
-      <p class="eyebrow">GỌN HƠN · TẬP TRUNG HƠN</p>
-      <h1>Ý tưởng của bạn.<br><span>Cách làm của bạn.</span></h1>
-      <p class="hero-copy">Tạo trò chơi, hoạt hình và câu chuyện bằng khối lệnh kéo thả. Không cần tài khoản hay đăng lên cộng đồng.</p>
-      <div class="hero-actions">
-        <a class="button button-primary" href="./editor/"><span aria-hidden="true">▶</span> Tạo dự án mới</a>
-        <button class="button button-secondary" id="open-project" type="button"><span aria-hidden="true">↗</span> Mở dự án .sb3</button>
-      </div>
-      <div class="hero-note"><span aria-hidden="true">●</span> Tệp dự án được lưu trên thiết bị khi bạn chọn lưu về máy.</div>
-    </section>
-
-    <section class="quick-section" aria-labelledby="quick-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">BẮT ĐẦU NHANH</p>
-          <h2 id="quick-title">Bạn muốn làm gì?</h2>
-        </div>
-      </div>
-      <div class="action-grid">
-        <a class="action-card card-purple" href="./editor/">
-          <span class="card-icon" aria-hidden="true">＋</span>
-          <span class="card-title">Tạo dự án</span>
-          <span class="card-copy">Bắt đầu với một sân khấu mới.</span>
-          <span class="card-arrow" aria-hidden="true">↗</span>
-        </a>
-        <button class="action-card card-blue" id="open-guide" type="button">
-          <span class="card-icon" aria-hidden="true">▣</span>
-          <span class="card-title">Mở tệp đã có</span>
-          <span class="card-copy">Tiếp tục dự án .sb3 đã lưu.</span>
-          <span class="card-arrow" aria-hidden="true">↗</span>
-        </button>
-        <button class="action-card card-orange" id="save-guide" type="button">
-          <span class="card-icon" aria-hidden="true">↓</span>
-          <span class="card-title">Lưu dự án</span>
-          <span class="card-copy">Giữ bản sao trong thư mục Tải xuống.</span>
-          <span class="card-arrow" aria-hidden="true">↗</span>
-        </button>
-      </div>
-    </section>
-
-    <section class="how-section" aria-labelledby="how-title">
-      <p class="eyebrow">THIẾT KẾ CHO MỘT NGƯỜI DÙNG</p>
-      <h2 id="how-title">Chỉ giữ những thứ cần thiết</h2>
-      <div class="feature-list">
-        <article class="feature">
-          <span class="feature-icon icon-green" aria-hidden="true">⌁</span>
-          <div><h3>Kéo thả khối lệnh</h3><p>Dùng trình biên tập Scratch 3 làm nền để tạo logic, nhân vật và hoạt cảnh.</p></div>
-        </article>
-        <article class="feature">
-          <span class="feature-icon icon-purple" aria-hidden="true">▤</span>
-          <div><h3>Không cần tài khoản</h3><p>Tập trung làm dự án của riêng bạn, không cần hồ sơ hay tính năng cộng đồng.</p></div>
-        </article>
-        <article class="feature">
-          <span class="feature-icon icon-orange" aria-hidden="true">⇩</span>
-          <div><h3>Lưu bằng tệp .sb3</h3><p>Lưu về thiết bị để sao lưu, chuyển máy hoặc mở lại sau này.</p></div>
-        </article>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <p>ScratchBetter là dự án độc lập, không phải ứng dụng chính thức của Scratch Foundation.</p>
-      <p><a href="https://github.com/kiet13312/Scratchbetter">Mã nguồn dự án</a> · <a href="https://github.com/scratchfoundation/scratch-editor">Engine Scratch Editor</a></p>
-    </footer>
-  </main>
-
-  <dialog id="help-dialog" class="help-dialog">
-    <form method="dialog">
-      <button class="dialog-close" aria-label="Đóng" value="close">×</button>
-    </form>
-    <div class="dialog-symbol" id="dialog-symbol" aria-hidden="true">▣</div>
-    <p class="eyebrow" id="dialog-eyebrow">HƯỚNG DẪN NHANH</p>
-    <h2 id="dialog-title">Mở dự án đã lưu</h2>
-    <p id="dialog-copy">Mở trình biên tập, chọn menu File rồi chọn Load from your computer. Sau đó chọn tệp .sb3 trong thư mục Tải xuống.</p>
-    <ol id="dialog-steps">
-      <li>Mở trình biên tập bên dưới.</li>
-      <li>Chọn <strong>File → Load from your computer</strong>.</li>
-      <li>Chọn tệp <strong>.sb3</strong> muốn mở.</li>
-    </ol>
-    <a id="dialog-action" class="button button-primary dialog-action" href="./editor/">Mở trình biên tập</a>
-  </dialog>
-
-  <button class="install-button" id="install-app" type="button" hidden>Cài ScratchBetter</button>
-  <script src="./app.js" defer></script>
+  <p>ScratchBetter đóng gói trình biên tập Scratch 3 trực tiếp làm màn hình chính. Mã nguồn giao diện được lấy trong workflow build từ <a href="https://github.com/scratchfoundation/scratch-editor">Scratch Editor</a>.</p>
+  <p><a href="https://github.com/kiet13312/Scratchbetter/actions">Mở GitHub Actions để build APK</a>.</p>
 </body>
 </html>
